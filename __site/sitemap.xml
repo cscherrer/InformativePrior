@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+<url>
+    <loc>informativeprior.com/404/index.html</loc>
+    <lastmod>2020-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>informativeprior.com/blog/index.html</loc>
+    <lastmod>2021-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>informativeprior.com/franklin/index.html</loc>
+    <lastmod>2020-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>informativeprior.com/blog/2021/symbolic-simplification/index.html</loc>
+    <lastmod>2021-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>informativeprior.com/index/</loc>
+    <lastmod>2021-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+</urlset>

@@ -1,0 +1,17 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title><![CDATA[Informative Prior]]></title>
+  <description><![CDATA[Example website using Franklin
+]]></description>
+  <link>informativeprior.com/</link>
+  <atom:link href="informativeprior.com/tag/julia/feed.xml" rel="self" type="application/rss+xml" />
+  <item>
+    <title><![CDATA[Symbolic Simplication]]></title>
+    <link>informativeprior.com/blog/2021/symbolic-simplification/</link>
+    <description><![CDATA[A short description of the page which would serve as blurb in a RSS feed; you can use basic markdown here but the whole description string must be a single line &#40;not a multiline string&#41;. Like this one for instance. Keep in mind that styling is minimal in RSS so for instance don&#39;t expect maths or fancy styling to work; images should be ok though:
+<br><a href="informativeprior.com/blog/2021/symbolic-simplification/">Read more</a>]]></description>
+    <guid>informativeprior.com/blog/2021/symbolic-simplification/</guid>
+    <pubDate>Mon, 25 Jan 2021 00:00:00 UT</pubDate>
+  </item>
+</channel>
+</rss>

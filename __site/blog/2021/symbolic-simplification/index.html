@@ -1,0 +1,140 @@
+<!doctype html> <!-- Minimal Mistakes Jekyll Theme 4.16.4 by Michael Rose Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes Free for personal and commercial use under the MIT license https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE --> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/highlight/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/minimal-mistakes.css"> <link rel=stylesheet  href="/css/adjust.css"> <link rel=icon  href="/assets/favicon.png"> <!--[if IE ]> <style> /* old IE unsupported flexbox fixes */ .greedy-nav .site-title { padding-right: 3em; } .greedy-nav button { position: absolute; top: 0; right: 0; height: 100%; } </style> <![endif]--> <title>Symbolic Simplication</title> <body class=layout--single > <div class=masthead > <div class=masthead__inner-wrap > <div class=masthead__menu > <nav id=site-nav  class=greedy-nav > <a class=site-title  href="/">Informative Prior</a> <ul class=visible-links > <li class=masthead__menu-item ><a href="/about-us/" >About Us</a> <li class=masthead__menu-item ><a href="/blog/" >Blog</a> <!-- <li class=masthead__menu-item ><a href="/franklin/" >Franklin</a> <li class=masthead__menu-item ><a href="/menu1/" >Code blocks</a> <li class=masthead__menu-item ><a href="/menu2/" >More Goodies</a> <li class=masthead__menu-item ><a href="/menu3/">Tags</a> --> </ul> <button class="greedy-nav__toggle hidden" type=button > <span class=visually-hidden >Toggle menu</span> <div class=navicon ></div> </button> <ul class="hidden-links hidden"></ul> </nav> </div> </div> </div> <div class=initial-content > <div id=main  role=main > <div class="sidebar sticky"> <div itemscope itemtype="https://schema.org/Person"> <div class=author__avatar > <img src="/assets/minimal-mistakes/zenobia.png" alt="Chad Scherrer" itemprop=image > </div> <div class=author__content > <h3 class=author__name  itemprop=name >Chad Scherrer</h3> <p class=author__bio  itemprop=description >Founder</p> </div> <div class=author__urls-wrapper > <button class="btn btn--inverse">Follow</button> <ul class="author__urls social-icons"> <li itemprop=homeLocation  itemscope itemtype="https://schema.org/Place"> <i class="fas fa-fw fa-map-marker-alt" aria-hidden=true ></i> <span itemprop=name >Seattle, WA</span> <li><a href="https://twitter.com/mmistakes" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden=true ></i> Twitter</a> <li><a href="https://github.com/mmistakes" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden=true ></i> GitHub</a> </ul> </div> </div> </div> <div class=franklin-content > <h1 id=symbolic_simplication ><a href="#symbolic_simplication">Symbolic Simplication</a></h1> <p><em>January 25, 2021</em></p> <p><em>Upcoming features in <a href="https://github.com/cscherrer/Soss.jl">Soss.jl</a> include static model simplification. After a one-time compilation cost, posterior log-densities for many models become &quot;constant cost&quot;, independent of the number of observations. Bayesian analysis for such models can easily scale to big data.</em></p> <p><em>The symbolic representation of the posterior log-density can also be useful for pedagogical purposes.</em></p> <div class=franklin-toc ><ol><li><a href="#first_a_model">First, a Model</a><li><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a><li><a href="#how_it_works">How it Works</a><li><a href="#code_generation">Code Generation</a></ol></div> <h2 id=first_a_model ><a href="#first_a_model">First, a Model</a></h2> <p>Let&#39;s start with something simple, say a linear regression with 10,000 observations.</p> <pre><code class="julia hljs"><span class=hljs-keyword >using</span> Soss
+
+N = <span class=hljs-number >10000</span>
+
+m = <span class=hljs-meta >@model</span> x, λ <span class=hljs-keyword >begin</span>
+    σ ~ Exponential(λ)
+    β ~ Normal(<span class=hljs-number >0</span>,<span class=hljs-number >1</span>) 
+    y ~ For(<span class=hljs-number >1</span>:N) <span class=hljs-keyword >do</span> j
+        Normal(x[j] * β, σ)
+    <span class=hljs-keyword >end</span>
+    <span class=hljs-keyword >return</span> y
+<span class=hljs-keyword >end</span></code></pre> <p>Soss models are <em>generative</em>, so we can use one to generate data. This is useful to help make sure the model assumptions are reasonable &#40;fake data should look similar to real data&#41;, and it&#39;s also handy for little examples like this.</p> <p>To generate data from <code>m</code>, we need to have values for the <em>input arguments</em> <code>x</code> and <code>λ</code>:</p> <pre><code class="julia hljs">x = randn(N)
+λ = <span class=hljs-number >1.0</span></code></pre> <p>Given this, we could just call <code>rand&#40;m&#40;x&#61;x,λ&#61;λ&#41;&#41;</code>. But this would &quot;forget&quot; the values of <code>σ</code> and <code>β</code>. To instead keep track of these, we can do</p> <pre><code class="julia hljs">trace = simulate(m(x=x, λ=<span class=hljs-number >1.0</span>)).trace
+y = trace.y</code></pre> <p>As a result, we now have</p> <pre><code class="plaintext hljs">trace.σ = 2.0654478733013453
+trace.β = -0.8042222347395631
+mean(y) = 0.0060253995228775085
+std(y) = 2.205991770484507
+</code></pre> <h2 id=evaluating_the_log-density_the_punchline ><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a></h2> <p>In Bayesian modeling, we&#39;re usually in a situation of having observed <code>y</code>, and wanting to infer what we can about latent parameters like <code>σ</code> and <code>β</code>. So let&#39;s construct the posterior distribution. We could write this as <code>post &#61; m&#40;x&#61;x, λ&#61;λ&#41; | &#40;y&#61;y,&#41;</code>, or using the shorthand</p> <pre><code class="julia hljs">post = m(; x, λ) | (; y)</code></pre>
+<p>To evaluate this, say on the <code>trace</code> from the original sample, we just call</p>
+<pre><code class="julia hljs">logdensity(post, trace)</code></pre>
+<p>which in this case gives </p>
+<pre><code class="plaintext hljs">-12226.169554198625</code></pre>
+<p>Let&#39;s see how fast it is.</p>
+<pre><code class="julia hljs"><span class=hljs-keyword >using</span> BenchmarkTools
+slow = <span class=hljs-meta >@benchmark</span> $logdensity($post, $trace)</code></pre>
+<pre><code class="plaintext hljs">BenchmarkTools.Trial: 
+  memory estimate:  1.07 MiB
+  allocs estimate:  60032
+  --------------
+  minimum time:     2.737 ms (0.00% GC)
+  median time:      2.926 ms (0.00% GC)
+  mean time:        3.065 ms (4.32% GC)
+  maximum time:     10.702 ms (70.83% GC)
+  --------------
+  samples:          1631
+  evals/sample:     1</code></pre>
+<p>Ok, clearly some things can be improved, for example we should be able to do this without allocation.</p>
+<p>But rather than dwell too much on that, let&#39;s jump to the punchline:</p>
+<pre><code class="julia hljs">ℓ = symlogdensity(post)
+f = codegen(post; ℓ=ℓ)
+fast = <span class=hljs-meta >@benchmark</span> $f($(;x,λ), $(;y), $trace)</code></pre>
+<pre><code class="plaintext hljs">BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     85.860 ns (0.00% GC)
+  median time:      88.380 ns (0.00% GC)
+  mean time:        88.233 ns (0.00% GC)
+  maximum time:     136.122 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     962</code></pre>
+
+<p>Note the units; we started out in milliseconds, but now we&#39;re in nanoseconds. A quick <code>minimum&#40;slow&#41;.time / minimum&#40;fast&#41;.time</code> shows we&#39;ve gotten a <strong>31881× speedup</strong>.</p>
+<h2 id=how_it_works ><a href="#how_it_works">How it Works</a></h2>
+<p><code>ℓ</code> is a symbolic expression from <a href="https://juliasymbolics.github.io/SymbolicUtils.jl/"><code>SymbolicUtils.jl</code></a>. To build it, we first generate a trace, as we did above. Now we have all of the types, so we can evaluate the log-density again, this time replacing the values with symbolic variables of the appropriate type.</p>
+<p>At this point, we have a symbolic expression, and we also have a dictionary of fixed values from the arguments and observed values. So we expand the expression and then walk the result, looking for subexpressions that evaluate to scalars with no free variables. When we find one, we use the dictionary to rewrite it.</p>
+<p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
+<pre><code class="julia hljs">Soss.cse(ℓ)</code></pre>
+<pre><code class="plaintext hljs">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
+ Symbol(&quot;##4235&quot;) =&gt; -1.0σ
+ Symbol(&quot;##4236&quot;) =&gt; log(σ)
+ Symbol(&quot;##4237&quot;) =&gt; -10000##4236
+ Symbol(&quot;##4238&quot;) =&gt; β^2
+ Symbol(&quot;##4239&quot;) =&gt; -0.5##4238
+ Symbol(&quot;##4240&quot;) =&gt; 15904.747631898405β
+ Symbol(&quot;##4241&quot;) =&gt; 10110.01091266704##4238
+ Symbol(&quot;##4242&quot;) =&gt; 48659.49356915616 + ##4240 + ##4241
+ Symbol(&quot;##4243&quot;) =&gt; σ^-2
+ Symbol(&quot;##4244&quot;) =&gt; -0.5##4242*##4243
+ Symbol(&quot;##4245&quot;) =&gt; ##4235 + ##4237 + ##4239 + ##4244</code></pre>
+<p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
+<pre><code class="julia hljs">sourceCodegen(post)</code></pre>
+<pre><code class="plaintext hljs">quote
+    var&quot;##4298&quot; = (*)(-1.0, σ)
+    var&quot;##4299&quot; = (log)(σ)
+    var&quot;##4300&quot; = (*)(-10000, var&quot;##4299&quot;)
+    var&quot;##4301&quot; = (^)(β, 2)
+    var&quot;##4302&quot; = (*)(-0.5, var&quot;##4301&quot;)
+    var&quot;##4303&quot; = (*)(15904.747631898405, β)
+    var&quot;##4304&quot; = (*)(10110.01091266704, var&quot;##4301&quot;)
+    var&quot;##4305&quot; = (+)(48659.49356915616, var&quot;##4303&quot;, var&quot;##4304&quot;)
+    var&quot;##4306&quot; = (^)(σ, -2)
+    var&quot;##4307&quot; = (*)(-0.5, var&quot;##4305&quot;, var&quot;##4306&quot;)
+    var&quot;##4308&quot; = (+)(var&quot;##4298&quot;, var&quot;##4300&quot;, var&quot;##4302&quot;, var&quot;##4307&quot;)
+end</code></pre>
+<p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
+<pre><code class="julia hljs">codegen(post; ℓ=ℓ)</code></pre>
+<pre><code class="plaintext hljs">function = (_args, _data, _pars;) -&gt; begin
+    begin
+        β = (Main.FD_SANDBOX_14269484959295921178).getproperty(_pars, :β)
+        σ = (Main.FD_SANDBOX_14269484959295921178).getproperty(_pars, :σ)
+        y = (Main.FD_SANDBOX_14269484959295921178).getproperty(_data, :y)
+        λ = (Main.FD_SANDBOX_14269484959295921178).getproperty(_args, :λ)
+        x = (Main.FD_SANDBOX_14269484959295921178).getproperty(_args, :x)
+        var&quot;##4397&quot; = (*)(-1.0, σ)
+        var&quot;##4398&quot; = (log)(σ)
+        var&quot;##4399&quot; = (*)(-10000, var&quot;##4398&quot;)
+        var&quot;##4400&quot; = (^)(β, 2)
+        var&quot;##4401&quot; = (*)(-0.5, var&quot;##4400&quot;)
+        var&quot;##4402&quot; = (*)(15904.747631898405, β)
+        var&quot;##4403&quot; = (*)(10110.01091266704, var&quot;##4400&quot;)
+        var&quot;##4404&quot; = (+)(48659.49356915616, var&quot;##4402&quot;, var&quot;##4403&quot;)
+        var&quot;##4405&quot; = (^)(σ, -2)
+        var&quot;##4406&quot; = (*)(-0.5, var&quot;##4404&quot;, var&quot;##4405&quot;)
+        var&quot;##4407&quot; = (+)(var&quot;##4397&quot;, var&quot;##4399&quot;, var&quot;##4401&quot;, var&quot;##4406&quot;)
+    end
+end</code></pre>
+<h2 id=code_generation ><a href="#code_generation">Code Generation</a></h2>
+<pre><code class="julia hljs">ℓλ = symlogdensity(post; noinline=(:λ,))</code></pre>
+<pre><code class="plaintext hljs">-10000log(σ) + -0.5(β^2) + -1λ*σ + -0.5(48659.493569156344 + 15904.747631898348β + 10110.010912667109(β^2))*(σ^-2) + log(λ)</code></pre>
+<pre><code class="julia hljs">fast = <span class=hljs-meta >@benchmark</span> $f($(;x,λ), $(;y), $trace)</code></pre>
+<pre><code class="julia hljs"><span class=hljs-meta >@time</span> dynamicHMC(post; ℓ = ℓ)</code></pre>
+<div class=page-foot >
+  <div class=copyright >
+    &copy; Chad Scherrer. Last modified: January 25, 2021. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+  </div>
+</div>
+</div>
+
+      </div> 
+    </div>   
+
+    <div class=page__footer >
+      <footer>
+        
+        
+        <div class=page__footer-follow >
+          <ul class=social-icons >
+            <li><strong>Follow:</strong>
+            <li><a href="https://twitter.com/mmistakes" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden=true ></i> Twitter</a>
+            <li><a href="https://github.com/mmistakes" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden=true ></i> GitHub</a>
+          </ul>
+        </div>
+        <div class=page__footer-copyright >&copy; 2020 Chad Scherrer. Powered by <a href="https://github.com/tlienart/Franklin.jl">Franklin</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel=nofollow >Minimal Mistakes</a>.</div>
+      </footer>
+    </div>
+
+    <script src="/libs/minimal-mistakes/main.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js" integrity="sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH" crossorigin=anonymous ></script>
