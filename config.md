@@ -3,13 +3,16 @@ Add here global page variables to use throughout your
 website.
 The website_* must be defined for the RSS to work
 -->
-@def website_title = "Franklin Template"
+@def website_title = "Informative Prior"
 @def website_descr = "Example website using Franklin"
 @def website_url   = "https://tlienart.github.io/FranklinTemplates.jl/"
 
 @def author = "Chad Scherrer"
 
 @def mintoclevel = 2
+
+@def prepath     = get(ENV, "PREVIEW_FRANKLIN_PREPATH", "") # In the third argument put the prepath you normally use
+@def website_url = get(ENV, "PREVIEW_FRANKLIN_WEBSITE_URL", "informativeprior.com") # Just put the website name
 
 <!--
 Add here files or directories that should be ignored by Franklin, otherwise
