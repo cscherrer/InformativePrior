@@ -4,8 +4,8 @@ website.
 The website_* must be defined for the RSS to work
 -->
 @def website_title = "Informative Prior"
-@def website_descr = "Example website using Franklin"
-@def website_url   = "https://tlienart.github.io/FranklinTemplates.jl/"
+@def website_descr = "Probabilistic Modeling in Julia"
+@def website_url   = "https://www.informativeprior.com"
 
 @def author = "Chad Scherrer"
 

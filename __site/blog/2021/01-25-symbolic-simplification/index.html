@@ -58,31 +58,31 @@ fast = <span class=hljs-meta >@benchmark</span> $f($(;x,λ), $(;y), $trace)</cod
 <p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
 <pre><code class="julia hljs">Soss.cse(ℓ)</code></pre>
 <pre><code class="plaintext hljs">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
- Symbol(&quot;##23230&quot;) =&gt; -1.0σ
- Symbol(&quot;##23231&quot;) =&gt; log(σ)
- Symbol(&quot;##23232&quot;) =&gt; -10000##23231
- Symbol(&quot;##23233&quot;) =&gt; β^2
- Symbol(&quot;##23234&quot;) =&gt; -0.5##23233
- Symbol(&quot;##23235&quot;) =&gt; 12351.829381805781β
- Symbol(&quot;##23236&quot;) =&gt; 9913.26414391223##23233
- Symbol(&quot;##23237&quot;) =&gt; 114974.37815831495 + ##23235 + ##23236
- Symbol(&quot;##23238&quot;) =&gt; σ^-2
- Symbol(&quot;##23239&quot;) =&gt; -0.5##23237*##23238
- Symbol(&quot;##23240&quot;) =&gt; ##23230 + ##23232 + ##23234 + ##23239</code></pre>
+ Symbol(&quot;##23586&quot;) =&gt; -1.0σ
+ Symbol(&quot;##23587&quot;) =&gt; log(σ)
+ Symbol(&quot;##23588&quot;) =&gt; -10000##23587
+ Symbol(&quot;##23589&quot;) =&gt; β^2
+ Symbol(&quot;##23590&quot;) =&gt; -0.5##23589
+ Symbol(&quot;##23591&quot;) =&gt; 12351.829381805781β
+ Symbol(&quot;##23592&quot;) =&gt; 9913.26414391223##23589
+ Symbol(&quot;##23593&quot;) =&gt; 114974.37815831495 + ##23591 + ##23592
+ Symbol(&quot;##23594&quot;) =&gt; σ^-2
+ Symbol(&quot;##23595&quot;) =&gt; -0.5##23593*##23594
+ Symbol(&quot;##23596&quot;) =&gt; ##23586 + ##23588 + ##23590 + ##23595</code></pre>
 <p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
 <pre><code class="julia hljs">sourceCodegen(post)</code></pre>
 <pre><code class="plaintext hljs">quote
-    var&quot;##23293&quot; = (*)(-1.0, σ)
-    var&quot;##23294&quot; = (log)(σ)
-    var&quot;##23295&quot; = (*)(-10000, var&quot;##23294&quot;)
-    var&quot;##23296&quot; = (^)(β, 2)
-    var&quot;##23297&quot; = (*)(-0.5, var&quot;##23296&quot;)
-    var&quot;##23298&quot; = (*)(12351.829381805781, β)
-    var&quot;##23299&quot; = (*)(9913.26414391223, var&quot;##23296&quot;)
-    var&quot;##23300&quot; = (+)(114974.37815831495, var&quot;##23298&quot;, var&quot;##23299&quot;)
-    var&quot;##23301&quot; = (^)(σ, -2)
-    var&quot;##23302&quot; = (*)(-0.5, var&quot;##23300&quot;, var&quot;##23301&quot;)
-    var&quot;##23303&quot; = (+)(var&quot;##23293&quot;, var&quot;##23295&quot;, var&quot;##23297&quot;, var&quot;##23302&quot;)
+    var&quot;##23649&quot; = (*)(-1.0, σ)
+    var&quot;##23650&quot; = (log)(σ)
+    var&quot;##23651&quot; = (*)(-10000, var&quot;##23650&quot;)
+    var&quot;##23652&quot; = (^)(β, 2)
+    var&quot;##23653&quot; = (*)(-0.5, var&quot;##23652&quot;)
+    var&quot;##23654&quot; = (*)(12351.829381805781, β)
+    var&quot;##23655&quot; = (*)(9913.26414391223, var&quot;##23652&quot;)
+    var&quot;##23656&quot; = (+)(114974.37815831495, var&quot;##23654&quot;, var&quot;##23655&quot;)
+    var&quot;##23657&quot; = (^)(σ, -2)
+    var&quot;##23658&quot; = (*)(-0.5, var&quot;##23656&quot;, var&quot;##23657&quot;)
+    var&quot;##23659&quot; = (+)(var&quot;##23649&quot;, var&quot;##23651&quot;, var&quot;##23653&quot;, var&quot;##23658&quot;)
 end</code></pre>
 <p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
 <pre><code class="julia hljs">codegen(post; ℓ=ℓ)</code></pre>
@@ -93,23 +93,23 @@ end</code></pre>
         y = (Main.FD_SANDBOX_8265385389467078856).getproperty(_data, :y)
         λ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :λ)
         x = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :x)
-        var&quot;##23392&quot; = (*)(-1.0, σ)
-        var&quot;##23393&quot; = (log)(σ)
-        var&quot;##23394&quot; = (*)(-10000, var&quot;##23393&quot;)
-        var&quot;##23395&quot; = (^)(β, 2)
-        var&quot;##23396&quot; = (*)(-0.5, var&quot;##23395&quot;)
-        var&quot;##23397&quot; = (*)(12351.829381805781, β)
-        var&quot;##23398&quot; = (*)(9913.26414391223, var&quot;##23395&quot;)
-        var&quot;##23399&quot; = (+)(114974.37815831495, var&quot;##23397&quot;, var&quot;##23398&quot;)
-        var&quot;##23400&quot; = (^)(σ, -2)
-        var&quot;##23401&quot; = (*)(-0.5, var&quot;##23399&quot;, var&quot;##23400&quot;)
-        var&quot;##23402&quot; = (+)(var&quot;##23392&quot;, var&quot;##23394&quot;, var&quot;##23396&quot;, var&quot;##23401&quot;)
+        var&quot;##23748&quot; = (*)(-1.0, σ)
+        var&quot;##23749&quot; = (log)(σ)
+        var&quot;##23750&quot; = (*)(-10000, var&quot;##23749&quot;)
+        var&quot;##23751&quot; = (^)(β, 2)
+        var&quot;##23752&quot; = (*)(-0.5, var&quot;##23751&quot;)
+        var&quot;##23753&quot; = (*)(12351.829381805781, β)
+        var&quot;##23754&quot; = (*)(9913.26414391223, var&quot;##23751&quot;)
+        var&quot;##23755&quot; = (+)(114974.37815831495, var&quot;##23753&quot;, var&quot;##23754&quot;)
+        var&quot;##23756&quot; = (^)(σ, -2)
+        var&quot;##23757&quot; = (*)(-0.5, var&quot;##23755&quot;, var&quot;##23756&quot;)
+        var&quot;##23758&quot; = (+)(var&quot;##23748&quot;, var&quot;##23750&quot;, var&quot;##23752&quot;, var&quot;##23757&quot;)
     end
 end</code></pre>
 <h1 id=accelerating_inference ><a href="#accelerating_inference">Accelerating Inference</a></h1>
 <p>After calling <code>symlogdensity</code> as above, you can manipulate the result however you like using <a href="https://github.com/JuliaSymbolics/SymbolicUtils.jl">SymbolicUtils.jl</a>. When you&#39;re happy with the result, it&#39;s easy to use this in inference. Here it is with Tamas Papp&#39;s <a href="https://github.com/tpapp/DynamicHMC.jl">DynamicHMC.jl</a>:</p>
 <pre><code class="julia hljs">postsample = dynamicHMC(post; ℓ=ℓ)</code></pre>
-<p>On my machine, this takes <strong>2.444 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
+<p>On my machine, this takes <strong>2.356 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
 <h1 id=when_does_this_work ><a href="#when_does_this_work">When Does This Work?</a></h1>
 <p>Cases where <code>symlogdensity</code> &quot;works&quot; in the sense of &quot;doesn&#39;t break&quot; are growing quickly; I expect that with some modest effort we can get to a point where every models gives <em>some</em> result that&#39;s at least as efficient as the direct approach.</p>
 <p>The great speedups we&#39;re seeing in this example come thanks in large part to the normal distribution &#40;for the observations&#41; is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations.</p>
