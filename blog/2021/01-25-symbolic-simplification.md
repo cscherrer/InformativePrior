@@ -162,7 +162,7 @@ There's still some possibility to get big speedups outside of exponential famili
 
 ## Related Research
 
-The most similar work I'm aware of is [Hakaru](https://hakaru-dev.github.io/), a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.
+The most similar work to this is [Hakaru](https://hakaru-dev.github.io/), a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.
 
 ## Final Thoughts
 
