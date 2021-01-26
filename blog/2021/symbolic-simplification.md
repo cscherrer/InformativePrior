@@ -140,6 +140,28 @@ codegen(post; ℓ=ℓ)
 
 \show{ex14}
 
+# Accelerating Inference
+
+After calling `symlogdensity` as above, you can manipulate the result however you like using [SymbolicUtils.jl](https://github.com/JuliaSymbolics/SymbolicUtils.jl). When you're happy with the result, it's easy to use this in inference. Here it is with Tamas Papp's [DynamicHMC.jl](https://github.com/tpapp/DynamicHMC.jl):
+
+```julia:ex15
+@elapsed postsample = dynamicHMC(post; ℓ=ℓ)
+```
+
+
+
+\show{ex15}
+
+```julia:ex16
+@show postsample
+```
+
+\show{ex16}
+
+
+## Can You Always Do This?
+
+
 ## Code Generation
 
 ```julia:ex12
