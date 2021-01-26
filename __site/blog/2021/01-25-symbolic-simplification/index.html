@@ -58,31 +58,31 @@ fast = <span class=hljs-meta >@benchmark</span> $f($(;x,λ), $(;y), $trace)</cod
 <p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
 <pre><code class="julia hljs">Soss.cse(ℓ)</code></pre>
 <pre><code class="plaintext hljs">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
- Symbol(&quot;##25366&quot;) =&gt; -1.0σ
- Symbol(&quot;##25367&quot;) =&gt; log(σ)
- Symbol(&quot;##25368&quot;) =&gt; -10000##25367
- Symbol(&quot;##25369&quot;) =&gt; β^2
- Symbol(&quot;##25370&quot;) =&gt; -0.5##25369
- Symbol(&quot;##25371&quot;) =&gt; 12351.829381805781β
- Symbol(&quot;##25372&quot;) =&gt; 9913.26414391223##25369
- Symbol(&quot;##25373&quot;) =&gt; 114974.37815831495 + ##25371 + ##25372
- Symbol(&quot;##25374&quot;) =&gt; σ^-2
- Symbol(&quot;##25375&quot;) =&gt; -0.5##25373*##25374
- Symbol(&quot;##25376&quot;) =&gt; ##25366 + ##25368 + ##25370 + ##25375</code></pre>
+ Symbol(&quot;##26434&quot;) =&gt; -1.0σ
+ Symbol(&quot;##26435&quot;) =&gt; log(σ)
+ Symbol(&quot;##26436&quot;) =&gt; -10000##26435
+ Symbol(&quot;##26437&quot;) =&gt; β^2
+ Symbol(&quot;##26438&quot;) =&gt; -0.5##26437
+ Symbol(&quot;##26439&quot;) =&gt; 12351.829381805781β
+ Symbol(&quot;##26440&quot;) =&gt; 9913.26414391223##26437
+ Symbol(&quot;##26441&quot;) =&gt; 114974.37815831495 + ##26439 + ##26440
+ Symbol(&quot;##26442&quot;) =&gt; σ^-2
+ Symbol(&quot;##26443&quot;) =&gt; -0.5##26441*##26442
+ Symbol(&quot;##26444&quot;) =&gt; ##26434 + ##26436 + ##26438 + ##26443</code></pre>
 <p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
 <pre><code class="julia hljs">sourceCodegen(post)</code></pre>
 <pre><code class="plaintext hljs">quote
-    var&quot;##25429&quot; = (*)(-1.0, σ)
-    var&quot;##25430&quot; = (log)(σ)
-    var&quot;##25431&quot; = (*)(-10000, var&quot;##25430&quot;)
-    var&quot;##25432&quot; = (^)(β, 2)
-    var&quot;##25433&quot; = (*)(-0.5, var&quot;##25432&quot;)
-    var&quot;##25434&quot; = (*)(12351.829381805781, β)
-    var&quot;##25435&quot; = (*)(9913.26414391223, var&quot;##25432&quot;)
-    var&quot;##25436&quot; = (+)(114974.37815831495, var&quot;##25434&quot;, var&quot;##25435&quot;)
-    var&quot;##25437&quot; = (^)(σ, -2)
-    var&quot;##25438&quot; = (*)(-0.5, var&quot;##25436&quot;, var&quot;##25437&quot;)
-    var&quot;##25439&quot; = (+)(var&quot;##25429&quot;, var&quot;##25431&quot;, var&quot;##25433&quot;, var&quot;##25438&quot;)
+    var&quot;##26497&quot; = (*)(-1.0, σ)
+    var&quot;##26498&quot; = (log)(σ)
+    var&quot;##26499&quot; = (*)(-10000, var&quot;##26498&quot;)
+    var&quot;##26500&quot; = (^)(β, 2)
+    var&quot;##26501&quot; = (*)(-0.5, var&quot;##26500&quot;)
+    var&quot;##26502&quot; = (*)(12351.829381805781, β)
+    var&quot;##26503&quot; = (*)(9913.26414391223, var&quot;##26500&quot;)
+    var&quot;##26504&quot; = (+)(114974.37815831495, var&quot;##26502&quot;, var&quot;##26503&quot;)
+    var&quot;##26505&quot; = (^)(σ, -2)
+    var&quot;##26506&quot; = (*)(-0.5, var&quot;##26504&quot;, var&quot;##26505&quot;)
+    var&quot;##26507&quot; = (+)(var&quot;##26497&quot;, var&quot;##26499&quot;, var&quot;##26501&quot;, var&quot;##26506&quot;)
 end</code></pre>
 <p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
 <pre><code class="julia hljs">codegen(post; ℓ=ℓ)</code></pre>
@@ -93,35 +93,37 @@ end</code></pre>
         y = (Main.FD_SANDBOX_8265385389467078856).getproperty(_data, :y)
         λ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :λ)
         x = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :x)
-        var&quot;##25528&quot; = (*)(-1.0, σ)
-        var&quot;##25529&quot; = (log)(σ)
-        var&quot;##25530&quot; = (*)(-10000, var&quot;##25529&quot;)
-        var&quot;##25531&quot; = (^)(β, 2)
-        var&quot;##25532&quot; = (*)(-0.5, var&quot;##25531&quot;)
-        var&quot;##25533&quot; = (*)(12351.829381805781, β)
-        var&quot;##25534&quot; = (*)(9913.26414391223, var&quot;##25531&quot;)
-        var&quot;##25535&quot; = (+)(114974.37815831495, var&quot;##25533&quot;, var&quot;##25534&quot;)
-        var&quot;##25536&quot; = (^)(σ, -2)
-        var&quot;##25537&quot; = (*)(-0.5, var&quot;##25535&quot;, var&quot;##25536&quot;)
-        var&quot;##25538&quot; = (+)(var&quot;##25528&quot;, var&quot;##25530&quot;, var&quot;##25532&quot;, var&quot;##25537&quot;)
+        var&quot;##26596&quot; = (*)(-1.0, σ)
+        var&quot;##26597&quot; = (log)(σ)
+        var&quot;##26598&quot; = (*)(-10000, var&quot;##26597&quot;)
+        var&quot;##26599&quot; = (^)(β, 2)
+        var&quot;##26600&quot; = (*)(-0.5, var&quot;##26599&quot;)
+        var&quot;##26601&quot; = (*)(12351.829381805781, β)
+        var&quot;##26602&quot; = (*)(9913.26414391223, var&quot;##26599&quot;)
+        var&quot;##26603&quot; = (+)(114974.37815831495, var&quot;##26601&quot;, var&quot;##26602&quot;)
+        var&quot;##26604&quot; = (^)(σ, -2)
+        var&quot;##26605&quot; = (*)(-0.5, var&quot;##26603&quot;, var&quot;##26604&quot;)
+        var&quot;##26606&quot; = (+)(var&quot;##26596&quot;, var&quot;##26598&quot;, var&quot;##26600&quot;, var&quot;##26605&quot;)
     end
 end</code></pre>
 <h1 id=accelerating_inference ><a href="#accelerating_inference">Accelerating Inference</a></h1>
 <p>After calling <code>symlogdensity</code> as above, you can manipulate the result however you like using <a href="https://github.com/JuliaSymbolics/SymbolicUtils.jl">SymbolicUtils.jl</a>. When you&#39;re happy with the result, it&#39;s easy to use this in inference. Here it is with Tamas Papp&#39;s <a href="https://github.com/tpapp/DynamicHMC.jl">DynamicHMC.jl</a>:</p>
 <pre><code class="julia hljs">postsample = dynamicHMC(post; ℓ=ℓ)</code></pre>
-<p>On my machine, this takes <strong>2.325 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
-<h1 id=when_does_this_work ><a href="#when_does_this_work">When Does This Work?</a></h1>
-<p>Cases where <code>symlogdensity</code> &quot;works&quot; in the sense of &quot;doesn&#39;t break&quot; are growing quickly; I expect that with some modest effort we can get to a point where every models gives <em>some</em> result that&#39;s at least as efficient as the direct approach.</p>
-<p>The great speedups we&#39;re seeing in this example come thanks in large part to the normal distribution &#40;for the observations&#41; is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations.</p>
-<p>There&#39;s still some possibility to get big speedups outside of exponential families by rewriting distributions to use exponential families as building blocks. For example, <a href="https://www.johndcook.com/t_normal_mixture.pdf">Student&#39;s T distribution can be written as a mixture of normals</a>. The mixture components come from an inverse gamma distribution, so in this case we&#39;d expect to be able to &quot;sum away&quot; the normal components, so what we&#39;re left with is in terms of inverse gammas.</p>
-<h2 id=related_research ><a href="#related_research">Related Research</a></h2>
-<p>The most similar work to this is <a href="https://hakaru-dev.github.io/">Hakaru</a>, a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.</p>
-<h2 id=final_thoughts ><a href="#final_thoughts">Final Thoughts</a></h2>
+<p>On my machine, this takes <strong>2.309 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
+<h1 id=limiting_inlining ><a href="#limiting_inlining">Limiting Inlining</a></h1>
 <p>In the above example, we took every opportunity for <a href="https://en.wikipedia.org/wiki/Constant_folding">constant folding</a>, as long as the result is a scalar. In some cases, that might be too much. For example, we expect to be able to use this approach to also accelerate <a href="https://en.wikipedia.org/wiki/Variational_Bayesian_methods">variational inference</a>, in which case we ought to avoid recompiling every time we change the variational parameters.</p>
 <p>To account for this, we have a <code>noinline</code> switch that allows specification of variables to leave along. For example,</p>
 <pre><code class="julia hljs">ℓλ = symlogdensity(post; noinline=(:λ,))</code></pre>
 <p>which results in </p>
 <pre><code class="plaintext hljs">-10000log(σ) + -0.5(β^2) + -1λ*σ + -0.5(114974.37815831488 + 12351.829381805866β + 9913.264143912242(β^2))*(σ^-2) + log(λ)</code></pre>
+<h1 id=when_does_this_work ><a href="#when_does_this_work">When Does This Work?</a></h1>
+<p>Cases where <code>symlogdensity</code> &quot;works&quot; in the sense of &quot;doesn&#39;t break&quot; are growing quickly; I expect that with some modest effort we can get to a point where every models gives <em>some</em> result that&#39;s at least as efficient as the direct approach.</p>
+<p>The great speedups we&#39;re seeing in this example come thanks in large part to the normal distribution &#40;for the observations&#41; is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations. The most obvious applicability I see is for <a href="https://en.wikipedia.org/wiki/Generalized_linear_model">generalized linear models</a>.</p>
+<p>There&#39;s still some possibility to get big speedups outside of exponential families by rewriting distributions to use exponential families as building blocks. For example, <a href="https://www.johndcook.com/t_normal_mixture.pdf">Student&#39;s T distribution can be written as a mixture of normals</a>. The mixture components come from an inverse gamma distribution, so in this case we&#39;d expect to be able to &quot;sum away&quot; the normal components, so what we&#39;re left with is in terms of inverse gammas.</p>
+<h2 id=related_research ><a href="#related_research">Related Research</a></h2>
+<p>The most similar work to this is <a href="https://hakaru-dev.github.io/">Hakaru</a>, a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.</p>
+<h2 id=final_thoughts ><a href="#final_thoughts">Final Thoughts</a></h2>
+<p>This work is still in relatively early stages, but I think there&#39;s a huge potential. If you think this can be helpful for your work, please get in touch&#33;</p>
 <div class=page-foot >
   <div class=copyright >
     &copy; Chad Scherrer. Last modified: January 26, 2021. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.

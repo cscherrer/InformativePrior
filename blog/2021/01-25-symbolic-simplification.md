@@ -152,19 +152,7 @@ end; sigdigits=4)) #hide
 
 On my machine, this takes **\textoutput{ex15} seconds**. Not bad for MCMC on 10,000 observations.
 
-# When Does This Work?
-
-Cases where `symlogdensity` "works" in the sense of "doesn't break" are growing quickly; I expect that with some modest effort we can get to a point where every models gives _some_ result that's at least as efficient as the direct approach.
-
-The great speedups we're seeing in this example come thanks in large part to the normal distribution (for the observations) is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations.
-
-There's still some possibility to get big speedups outside of exponential families by rewriting distributions to use exponential families as building blocks. For example, [Student's T distribution can be written as a mixture of normals](https://www.johndcook.com/t_normal_mixture.pdf). The mixture components come from an inverse gamma distribution, so in this case we'd expect to be able to "sum away" the normal components, so what we're left with is in terms of inverse gammas.
-
-## Related Research
-
-The most similar work to this is [Hakaru](https://hakaru-dev.github.io/), a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.
-
-## Final Thoughts
+# Limiting Inlining
 
 In the above example, we took every opportunity for [constant folding](https://en.wikipedia.org/wiki/Constant_folding), as long as the result is a scalar. In some cases, that might be too much. For example, we expect to be able to use this approach to also accelerate [variational inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods), in which case we ought to avoid recompiling every time we change the variational parameters.
 
@@ -177,3 +165,19 @@ To account for this, we have a `noinline` switch that allows specification of va
 which results in 
 
 \show{ex12}
+
+# When Does This Work?
+
+Cases where `symlogdensity` "works" in the sense of "doesn't break" are growing quickly; I expect that with some modest effort we can get to a point where every models gives _some_ result that's at least as efficient as the direct approach.
+
+The great speedups we're seeing in this example come thanks in large part to the normal distribution (for the observations) is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations. The most obvious applicability I see is for [generalized linear models](https://en.wikipedia.org/wiki/Generalized_linear_model).
+
+There's still some possibility to get big speedups outside of exponential families by rewriting distributions to use exponential families as building blocks. For example, [Student's T distribution can be written as a mixture of normals](https://www.johndcook.com/t_normal_mixture.pdf). The mixture components come from an inverse gamma distribution, so in this case we'd expect to be able to "sum away" the normal components, so what we're left with is in terms of inverse gammas.
+
+## Related Research
+
+The most similar work to this is [Hakaru](https://hakaru-dev.github.io/), a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.
+
+## Final Thoughts
+
+This work is still in relatively early stages, but I think there's a huge potential. If you think this can be helpful for your work, please get in touch!
