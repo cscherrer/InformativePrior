@@ -58,31 +58,31 @@ fast = <span class=hljs-meta >@benchmark</span> $f($(;x,λ), $(;y), $trace)</cod
 <p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
 <pre><code class="julia hljs">Soss.cse(ℓ)</code></pre>
 <pre><code class="plaintext hljs">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
- Symbol(&quot;##4536&quot;) =&gt; -1.0σ
- Symbol(&quot;##4537&quot;) =&gt; log(σ)
- Symbol(&quot;##4538&quot;) =&gt; -10000##4537
- Symbol(&quot;##4539&quot;) =&gt; β^2
- Symbol(&quot;##4540&quot;) =&gt; -0.5##4539
- Symbol(&quot;##4541&quot;) =&gt; -7650.666581436265β
- Symbol(&quot;##4542&quot;) =&gt; 9853.309083277072##4539
- Symbol(&quot;##4543&quot;) =&gt; 3920.0185858104355 + ##4541 + ##4542
- Symbol(&quot;##4544&quot;) =&gt; σ^-2
- Symbol(&quot;##4545&quot;) =&gt; -0.5##4543*##4544
- Symbol(&quot;##4546&quot;) =&gt; ##4536 + ##4538 + ##4540 + ##4545</code></pre>
+ Symbol(&quot;##5446&quot;) =&gt; -1.0σ
+ Symbol(&quot;##5447&quot;) =&gt; log(σ)
+ Symbol(&quot;##5448&quot;) =&gt; -10000##5447
+ Symbol(&quot;##5449&quot;) =&gt; β^2
+ Symbol(&quot;##5450&quot;) =&gt; -0.5##5449
+ Symbol(&quot;##5451&quot;) =&gt; -7650.666581436265β
+ Symbol(&quot;##5452&quot;) =&gt; 9853.309083277072##5449
+ Symbol(&quot;##5453&quot;) =&gt; 3920.0185858104355 + ##5451 + ##5452
+ Symbol(&quot;##5454&quot;) =&gt; σ^-2
+ Symbol(&quot;##5455&quot;) =&gt; -0.5##5453*##5454
+ Symbol(&quot;##5456&quot;) =&gt; ##5446 + ##5448 + ##5450 + ##5455</code></pre>
 <p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
 <pre><code class="julia hljs">sourceCodegen(post)</code></pre>
 <pre><code class="plaintext hljs">quote
-    var&quot;##4599&quot; = (*)(-1.0, σ)
-    var&quot;##4600&quot; = (log)(σ)
-    var&quot;##4601&quot; = (*)(-10000, var&quot;##4600&quot;)
-    var&quot;##4602&quot; = (^)(β, 2)
-    var&quot;##4603&quot; = (*)(-0.5, var&quot;##4602&quot;)
-    var&quot;##4604&quot; = (*)(-7650.666581436265, β)
-    var&quot;##4605&quot; = (*)(9853.309083277072, var&quot;##4602&quot;)
-    var&quot;##4606&quot; = (+)(3920.0185858104355, var&quot;##4604&quot;, var&quot;##4605&quot;)
-    var&quot;##4607&quot; = (^)(σ, -2)
-    var&quot;##4608&quot; = (*)(-0.5, var&quot;##4606&quot;, var&quot;##4607&quot;)
-    var&quot;##4609&quot; = (+)(var&quot;##4599&quot;, var&quot;##4601&quot;, var&quot;##4603&quot;, var&quot;##4608&quot;)
+    var&quot;##5509&quot; = (*)(-1.0, σ)
+    var&quot;##5510&quot; = (log)(σ)
+    var&quot;##5511&quot; = (*)(-10000, var&quot;##5510&quot;)
+    var&quot;##5512&quot; = (^)(β, 2)
+    var&quot;##5513&quot; = (*)(-0.5, var&quot;##5512&quot;)
+    var&quot;##5514&quot; = (*)(-7650.666581436265, β)
+    var&quot;##5515&quot; = (*)(9853.309083277072, var&quot;##5512&quot;)
+    var&quot;##5516&quot; = (+)(3920.0185858104355, var&quot;##5514&quot;, var&quot;##5515&quot;)
+    var&quot;##5517&quot; = (^)(σ, -2)
+    var&quot;##5518&quot; = (*)(-0.5, var&quot;##5516&quot;, var&quot;##5517&quot;)
+    var&quot;##5519&quot; = (+)(var&quot;##5509&quot;, var&quot;##5511&quot;, var&quot;##5513&quot;, var&quot;##5518&quot;)
 end</code></pre>
 <p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
 <pre><code class="julia hljs">codegen(post; ℓ=ℓ)</code></pre>
@@ -93,23 +93,23 @@ end</code></pre>
         y = (Main.FD_SANDBOX_8265385389467078856).getproperty(_data, :y)
         λ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :λ)
         x = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :x)
-        var&quot;##4698&quot; = (*)(-1.0, σ)
-        var&quot;##4699&quot; = (log)(σ)
-        var&quot;##4700&quot; = (*)(-10000, var&quot;##4699&quot;)
-        var&quot;##4701&quot; = (^)(β, 2)
-        var&quot;##4702&quot; = (*)(-0.5, var&quot;##4701&quot;)
-        var&quot;##4703&quot; = (*)(-7650.666581436265, β)
-        var&quot;##4704&quot; = (*)(9853.309083277072, var&quot;##4701&quot;)
-        var&quot;##4705&quot; = (+)(3920.0185858104355, var&quot;##4703&quot;, var&quot;##4704&quot;)
-        var&quot;##4706&quot; = (^)(σ, -2)
-        var&quot;##4707&quot; = (*)(-0.5, var&quot;##4705&quot;, var&quot;##4706&quot;)
-        var&quot;##4708&quot; = (+)(var&quot;##4698&quot;, var&quot;##4700&quot;, var&quot;##4702&quot;, var&quot;##4707&quot;)
+        var&quot;##5608&quot; = (*)(-1.0, σ)
+        var&quot;##5609&quot; = (log)(σ)
+        var&quot;##5610&quot; = (*)(-10000, var&quot;##5609&quot;)
+        var&quot;##5611&quot; = (^)(β, 2)
+        var&quot;##5612&quot; = (*)(-0.5, var&quot;##5611&quot;)
+        var&quot;##5613&quot; = (*)(-7650.666581436265, β)
+        var&quot;##5614&quot; = (*)(9853.309083277072, var&quot;##5611&quot;)
+        var&quot;##5615&quot; = (+)(3920.0185858104355, var&quot;##5613&quot;, var&quot;##5614&quot;)
+        var&quot;##5616&quot; = (^)(σ, -2)
+        var&quot;##5617&quot; = (*)(-0.5, var&quot;##5615&quot;, var&quot;##5616&quot;)
+        var&quot;##5618&quot; = (+)(var&quot;##5608&quot;, var&quot;##5610&quot;, var&quot;##5612&quot;, var&quot;##5617&quot;)
     end
 end</code></pre>
 <h1 id=accelerating_inference ><a href="#accelerating_inference">Accelerating Inference</a></h1>
 <p>After calling <code>symlogdensity</code> as above, you can manipulate the result however you like using <a href="https://github.com/JuliaSymbolics/SymbolicUtils.jl">SymbolicUtils.jl</a>. When you&#39;re happy with the result, it&#39;s easy to use this in inference. Here it is with Tamas Papp&#39;s <a href="https://github.com/tpapp/DynamicHMC.jl">DynamicHMC.jl</a>:</p>
 <pre><code class="julia hljs">postsample = dynamicHMC(post; ℓ=ℓ)</code></pre>
-<p>On my machine, this takes <strong>2.009 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
+<p>On my machine, this takes <strong>1.979 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
 <h1 id=limiting_inlining ><a href="#limiting_inlining">Limiting Inlining</a></h1>
 <p>In the above example, we took every opportunity for <a href="https://en.wikipedia.org/wiki/Constant_folding">constant folding</a>, as long as the result is a scalar. In some cases, that might be too much. For example, we expect to be able to use this approach to also accelerate <a href="https://en.wikipedia.org/wiki/Variational_Bayesian_methods">variational inference</a>, in which case we ought to avoid recompiling every time we change the variational parameters.</p>
 <p>To account for this, we have a <code>noinline</code> switch that allows specification of variables to leave alone. For example,</p>
@@ -132,11 +132,12 @@ after = <span class=hljs-meta >@elapsed</span> dynamicHMC(post; ℓ=ℓ)
 speedup = before / after
 
 <span class=hljs-meta >@show</span> before, after, speedup</code></pre>
-<pre><code class="plaintext hljs">(before, after, speedup) = (25.148080811, 1.945754861, 12.92458845410537)
+<pre><code class="plaintext hljs">(before, after, speedup) = (28.172061067, 2.027028042, 13.898209833941706)
 </code></pre>
 <p>The result is not nearly as dramatic as we saw for evaluation, but it&#39;s still substantial. Like all the best questions, the answer to this one raises plenty more questions, which we&#39;ll look into another time.</p>
 <h2 id=related_research ><a href="#related_research">Related Research</a></h2>
-<p>The most similar work to this is <a href="https://hakaru-dev.github.io/">Hakaru</a>, a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.</p>
+<p><a href="https://hakaru-dev.github.io/">Hakaru</a>, a Haskell-based probabilistic programming language, also has a strong focus on symbolic simplification. Hakaru is excellent work and is much more ambitious in the available transformations, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.</p>
+<p>Avi Bryant&#39;s Scala-based <a href="https://rainier.fit/docs/probprog">Rainier</a> system is very similar in its goals and the available rewrites, and is more mature than this work. There are likely differences in both extensibility and performance, though that&#39;s not yet clear. We&#39;ll need to consider this in future work.</p>
 <h2 id=final_thoughts ><a href="#final_thoughts">Final Thoughts</a></h2>
 <p>This work is still in relatively early stages, but I think there&#39;s a huge potential. If you think this can be helpful for your work, please get in touch&#33;</p>
 <div class=page-foot >

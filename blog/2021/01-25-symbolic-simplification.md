@@ -198,10 +198,11 @@ speedup = before / after
 
 The result is not nearly as dramatic as we saw for evaluation, but it's still substantial. Like all the best questions, the answer to this one raises plenty more questions, which we'll look into another time.
 
-
 ## Related Research
 
-The most similar work to this is [Hakaru](https://hakaru-dev.github.io/), a Haskell-based probabilistic programming language. Hakaru is excellent work, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.
+[Hakaru](https://hakaru-dev.github.io/), a Haskell-based probabilistic programming language, also has a strong focus on symbolic simplification. Hakaru is excellent work and is much more ambitious in the available transformations, but for our purposes we find the advantages of the Julia language and ecosystem too great to step away from.
+
+Avi Bryant's Scala-based [Rainier](https://rainier.fit/docs/probprog) system is very similar in its goals and the available rewrites, and is more mature than this work. There are likely differences in both extensibility and performance, though that's not yet clear. We'll need to consider this in future work.
 
 ## Final Thoughts
 
