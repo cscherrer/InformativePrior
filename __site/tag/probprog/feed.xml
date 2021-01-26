@@ -6,7 +6,7 @@
   <link>informativeprior.com/</link>
   <atom:link href="informativeprior.com/tag/probprog/feed.xml" rel="self" type="application/rss+xml" />
   <item>
-    <title><![CDATA[Symbolic Simplication]]></title>
+    <title><![CDATA[Symbolic Simplification]]></title>
     <link>informativeprior.com/blog/2021/01-25-symbolic-simplification/</link>
     <description><![CDATA[Upcoming features in Soss.jl include static model simplification. After a one-time compilation cost, posterior log-densities for many models become constant cost, independent of the number of observations. Bayesian analysis for such models can easily scale to big data. The symbolic representation of the posterior log-density can also be useful for pedagogical purposes.
 <br><a href="informativeprior.com/blog/2021/01-25-symbolic-simplification/">Read more</a>]]></description>

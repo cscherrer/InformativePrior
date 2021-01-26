@@ -1,5 +1,5 @@
 +++
-title = "Symbolic Simplication"
+title = "Symbolic Simplification"
 hascode = true
 rss = "Upcoming features in Soss.jl include static model simplification. After a one-time compilation cost, posterior log-densities for many models become constant cost, independent of the number of observations. Bayesian analysis for such models can easily scale to big data. The symbolic representation of the posterior log-density can also be useful for pedagogical purposes."
 +++
@@ -7,7 +7,7 @@ rss = "Upcoming features in Soss.jl include static model simplification. After a
 @def rss_pubdate = Date(2021,1,25)
 @def tags=["julia","probprog"]
 
-# Symbolic Simplication
+# Symbolic Simplification
 _January 25, 2021_
 
 _Upcoming features in [Soss.jl](https://github.com/cscherrer/Soss.jl) include static model simplification. After a one-time compilation cost, posterior log-densities for many models become "constant cost", independent of the number of observations. Bayesian analysis for such models can easily scale to big data._
@@ -157,7 +157,7 @@ On my machine, this takes **\textoutput{ex15} seconds**. Not bad for MCMC on 10,
 
 In the above example, we took every opportunity for [constant folding](https://en.wikipedia.org/wiki/Constant_folding), as long as the result is a scalar. In some cases, that might be too much. For example, we expect to be able to use this approach to also accelerate [variational inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods), in which case we ought to avoid recompiling every time we change the variational parameters.
 
-To account for this, we have a `noinline` switch that allows specification of variables to leave along. For example,
+To account for this, we have a `noinline` switch that allows specification of variables to leave alone. For example,
 
 ```julia:ex12
 ℓλ = symlogdensity(post; noinline=(:λ,))
@@ -174,6 +174,30 @@ Cases where `symlogdensity` "works" in the sense of "doesn't break" are growing 
 The great speedups we're seeing in this example come thanks in large part to the normal distribution (for the observations) is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations. The most obvious applicability I see is for [generalized linear models](https://en.wikipedia.org/wiki/Generalized_linear_model).
 
 There's still some possibility to get big speedups outside of exponential families by rewriting distributions to use exponential families as building blocks. For example, [Student's T distribution can be written as a mixture of normals](https://www.johndcook.com/t_normal_mixture.pdf). The mixture components come from an inverse gamma distribution, so in this case we'd expect to be able to "sum away" the normal components, so what we're left with is in terms of inverse gammas.
+
+## HMC Timing
+
+On Twitter, Colin Carroll had a great question:
+
+~~~
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">You mention the timing for DynamicHMC is 2.309 seconds -- do you know what it is without the symbolic simplification? I would expect the log probability does not dominate here, but maybe this also speeds up gradient evaluations?</p>&mdash; Colin Carroll (@colindcarroll) <a href="https://twitter.com/colindcarroll/status/1353915466444640257?ref_src=twsrc%5Etfw">January 26, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+~~~
+
+[Franklin re-runs the code, so the timings will vary a bit]
+
+```julia:ex13
+before = @elapsed dynamicHMC(post)
+after = @elapsed dynamicHMC(post; ℓ=ℓ)
+
+speedup = before / after
+
+@show before, after, speedup
+```
+
+\show{ex13}
+
+The result is not nearly as dramatic as we saw for evaluation, but it's still substantial. Like all the best questions, the answer to this one raises plenty more questions, which we'll look into another time.
+
 
 ## Related Research
 
