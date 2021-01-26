@@ -1,4 +1,4 @@
-<!doctype html> <!-- Minimal Mistakes Jekyll Theme 4.16.4 by Michael Rose Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes Free for personal and commercial use under the MIT license https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE --> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/highlight/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/minimal-mistakes.css"> <link rel=stylesheet  href="/css/adjust.css"> <link rel=icon  href="/assets/favicon.png"> <!--[if IE ]> <style> /* old IE unsupported flexbox fixes */ .greedy-nav .site-title { padding-right: 3em; } .greedy-nav button { position: absolute; top: 0; right: 0; height: 100%; } </style> <![endif]--> <title>Symbolic Simplication</title> <body class=layout--single > <div class=masthead > <div class=masthead__inner-wrap > <div class=masthead__menu > <nav id=site-nav  class=greedy-nav > <a class=site-title  href="/">Informative Prior</a> <ul class=visible-links > <li class=masthead__menu-item ><a href="/about-us/" >About Us</a> <li class=masthead__menu-item ><a href="/blog/" >Blog</a> <!-- <li class=masthead__menu-item ><a href="/franklin/" >Franklin</a> <li class=masthead__menu-item ><a href="/menu1/" >Code blocks</a> <li class=masthead__menu-item ><a href="/menu2/" >More Goodies</a> <li class=masthead__menu-item ><a href="/menu3/">Tags</a> --> </ul> <button class="greedy-nav__toggle hidden" type=button > <span class=visually-hidden >Toggle menu</span> <div class=navicon ></div> </button> <ul class="hidden-links hidden"></ul> </nav> </div> </div> </div> <div class=initial-content > <div id=main  role=main > <div class="sidebar sticky"> <div itemscope itemtype="https://schema.org/Person"> <div class=author__avatar > <img src="/assets/chad-avatar.jpg" alt="Chad Scherrer" itemprop=image > </div> <div class=author__content > <h3 class=author__name  itemprop=name >Chad Scherrer</h3> <p class=author__bio  itemprop=description >Founder</p> </div> <div class=author__urls-wrapper > <button class="btn btn--inverse">Follow</button> <ul class="author__urls social-icons"> <li itemprop=homeLocation  itemscope itemtype="https://schema.org/Place"> <i class="fas fa-fw fa-map-marker-alt" aria-hidden=true ></i> <span itemprop=name >Seattle, WA</span> <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden=true ></i> Twitter</a> <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden=true ></i> GitHub</a> </ul> </div> </div> </div> <div class=franklin-content > <h1 id=symbolic_simplication ><a href="#symbolic_simplication">Symbolic Simplication</a></h1> <p><em>January 25, 2021</em></p> <p><em>Upcoming features in <a href="https://github.com/cscherrer/Soss.jl">Soss.jl</a> include static model simplification. After a one-time compilation cost, posterior log-densities for many models become &quot;constant cost&quot;, independent of the number of observations. Bayesian analysis for such models can easily scale to big data.</em></p> <p><em>The symbolic representation of the posterior log-density can also be useful for pedagogical purposes.</em></p> <div class=franklin-toc ><ol><li><a href="#first_a_model">First, a Model</a><li><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a><li><a href="#how_it_works">How it Works</a><li><a href="#related_research">Related Research</a><li><a href="#final_thoughts">Final Thoughts</a></ol></div> <h2 id=first_a_model ><a href="#first_a_model">First, a Model</a></h2> <p>Let&#39;s start with something simple, say a linear regression with 10,000 observations.</p> <pre><code class="julia hljs"><span class=hljs-keyword >using</span> Soss
+<!doctype html> <!-- Minimal Mistakes Jekyll Theme 4.16.4 by Michael Rose Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes Free for personal and commercial use under the MIT license https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE --> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/highlight/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/minimal-mistakes.css"> <link rel=stylesheet  href="/css/adjust.css"> <link rel=icon  href="/assets/favicon.png"> <!--[if IE ]> <style> /* old IE unsupported flexbox fixes */ .greedy-nav .site-title { padding-right: 3em; } .greedy-nav button { position: absolute; top: 0; right: 0; height: 100%; } </style> <![endif]--> <title>Symbolic Simplication</title> <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PYLMFWW0P"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3PYLMFWW0P'); </script> <body class=layout--single > <div class=masthead > <div class=masthead__inner-wrap > <div class=masthead__menu > <nav id=site-nav  class=greedy-nav > <a class=site-title  href="/">Informative Prior</a> <ul class=visible-links > <li class=masthead__menu-item ><a href="/about-us/" >About Us</a> <li class=masthead__menu-item ><a href="/blog/" >Blog</a> <!-- <li class=masthead__menu-item ><a href="/franklin/" >Franklin</a> <li class=masthead__menu-item ><a href="/menu1/" >Code blocks</a> <li class=masthead__menu-item ><a href="/menu2/" >More Goodies</a> <li class=masthead__menu-item ><a href="/menu3/">Tags</a> --> </ul> <button class="greedy-nav__toggle hidden" type=button > <span class=visually-hidden >Toggle menu</span> <div class=navicon ></div> </button> <ul class="hidden-links hidden"></ul> </nav> </div> </div> </div> <div class=initial-content > <div id=main  role=main > <div class="sidebar sticky"> <div itemscope itemtype="https://schema.org/Person"> <div class=author__avatar > <img src="/assets/chad-avatar.jpg" alt="Chad Scherrer" itemprop=image > </div> <div class=author__content > <h3 class=author__name  itemprop=name >Chad Scherrer</h3> <p class=author__bio  itemprop=description >Founder</p> </div> <div class=author__urls-wrapper > <button class="btn btn--inverse">Follow</button> <ul class="author__urls social-icons"> <li itemprop=homeLocation  itemscope itemtype="https://schema.org/Place"> <i class="fas fa-fw fa-map-marker-alt" aria-hidden=true ></i> <span itemprop=name >Seattle, WA</span> <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden=true ></i> Twitter</a> <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden=true ></i> GitHub</a> </ul> </div> </div> </div> <div class=franklin-content > <h1 id=symbolic_simplication ><a href="#symbolic_simplication">Symbolic Simplication</a></h1> <p><em>January 25, 2021</em></p> <p><em>Upcoming features in <a href="https://github.com/cscherrer/Soss.jl">Soss.jl</a> include static model simplification. After a one-time compilation cost, posterior log-densities for many models become &quot;constant cost&quot;, independent of the number of observations. Bayesian analysis for such models can easily scale to big data.</em></p> <p><em>The symbolic representation of the posterior log-density can also be useful for pedagogical purposes.</em></p> <div class=franklin-toc ><ol><li><a href="#first_a_model">First, a Model</a><li><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a><li><a href="#how_it_works">How it Works</a><li><a href="#related_research">Related Research</a><li><a href="#final_thoughts">Final Thoughts</a></ol></div> <h2 id=first_a_model ><a href="#first_a_model">First, a Model</a></h2> <p>Let&#39;s start with something simple, say a linear regression with 10,000 observations.</p> <pre><code class="julia hljs"><span class=hljs-keyword >using</span> Soss
 
 N = <span class=hljs-number >10000</span>
 
@@ -58,31 +58,31 @@ fast = <span class=hljs-meta >@benchmark</span> $f($(;x,λ), $(;y), $trace)</cod
 <p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
 <pre><code class="julia hljs">Soss.cse(ℓ)</code></pre>
 <pre><code class="plaintext hljs">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
- Symbol(&quot;##23942&quot;) =&gt; -1.0σ
- Symbol(&quot;##23943&quot;) =&gt; log(σ)
- Symbol(&quot;##23944&quot;) =&gt; -10000##23943
- Symbol(&quot;##23945&quot;) =&gt; β^2
- Symbol(&quot;##23946&quot;) =&gt; -0.5##23945
- Symbol(&quot;##23947&quot;) =&gt; 12351.829381805781β
- Symbol(&quot;##23948&quot;) =&gt; 9913.26414391223##23945
- Symbol(&quot;##23949&quot;) =&gt; 114974.37815831495 + ##23947 + ##23948
- Symbol(&quot;##23950&quot;) =&gt; σ^-2
- Symbol(&quot;##23951&quot;) =&gt; -0.5##23949*##23950
- Symbol(&quot;##23952&quot;) =&gt; ##23942 + ##23944 + ##23946 + ##23951</code></pre>
+ Symbol(&quot;##25010&quot;) =&gt; -1.0σ
+ Symbol(&quot;##25011&quot;) =&gt; log(σ)
+ Symbol(&quot;##25012&quot;) =&gt; -10000##25011
+ Symbol(&quot;##25013&quot;) =&gt; β^2
+ Symbol(&quot;##25014&quot;) =&gt; -0.5##25013
+ Symbol(&quot;##25015&quot;) =&gt; 12351.829381805781β
+ Symbol(&quot;##25016&quot;) =&gt; 9913.26414391223##25013
+ Symbol(&quot;##25017&quot;) =&gt; 114974.37815831495 + ##25015 + ##25016
+ Symbol(&quot;##25018&quot;) =&gt; σ^-2
+ Symbol(&quot;##25019&quot;) =&gt; -0.5##25017*##25018
+ Symbol(&quot;##25020&quot;) =&gt; ##25010 + ##25012 + ##25014 + ##25019</code></pre>
 <p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
 <pre><code class="julia hljs">sourceCodegen(post)</code></pre>
 <pre><code class="plaintext hljs">quote
-    var&quot;##24005&quot; = (*)(-1.0, σ)
-    var&quot;##24006&quot; = (log)(σ)
-    var&quot;##24007&quot; = (*)(-10000, var&quot;##24006&quot;)
-    var&quot;##24008&quot; = (^)(β, 2)
-    var&quot;##24009&quot; = (*)(-0.5, var&quot;##24008&quot;)
-    var&quot;##24010&quot; = (*)(12351.829381805781, β)
-    var&quot;##24011&quot; = (*)(9913.26414391223, var&quot;##24008&quot;)
-    var&quot;##24012&quot; = (+)(114974.37815831495, var&quot;##24010&quot;, var&quot;##24011&quot;)
-    var&quot;##24013&quot; = (^)(σ, -2)
-    var&quot;##24014&quot; = (*)(-0.5, var&quot;##24012&quot;, var&quot;##24013&quot;)
-    var&quot;##24015&quot; = (+)(var&quot;##24005&quot;, var&quot;##24007&quot;, var&quot;##24009&quot;, var&quot;##24014&quot;)
+    var&quot;##25073&quot; = (*)(-1.0, σ)
+    var&quot;##25074&quot; = (log)(σ)
+    var&quot;##25075&quot; = (*)(-10000, var&quot;##25074&quot;)
+    var&quot;##25076&quot; = (^)(β, 2)
+    var&quot;##25077&quot; = (*)(-0.5, var&quot;##25076&quot;)
+    var&quot;##25078&quot; = (*)(12351.829381805781, β)
+    var&quot;##25079&quot; = (*)(9913.26414391223, var&quot;##25076&quot;)
+    var&quot;##25080&quot; = (+)(114974.37815831495, var&quot;##25078&quot;, var&quot;##25079&quot;)
+    var&quot;##25081&quot; = (^)(σ, -2)
+    var&quot;##25082&quot; = (*)(-0.5, var&quot;##25080&quot;, var&quot;##25081&quot;)
+    var&quot;##25083&quot; = (+)(var&quot;##25073&quot;, var&quot;##25075&quot;, var&quot;##25077&quot;, var&quot;##25082&quot;)
 end</code></pre>
 <p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
 <pre><code class="julia hljs">codegen(post; ℓ=ℓ)</code></pre>
@@ -93,23 +93,23 @@ end</code></pre>
         y = (Main.FD_SANDBOX_8265385389467078856).getproperty(_data, :y)
         λ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :λ)
         x = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :x)
-        var&quot;##24104&quot; = (*)(-1.0, σ)
-        var&quot;##24105&quot; = (log)(σ)
-        var&quot;##24106&quot; = (*)(-10000, var&quot;##24105&quot;)
-        var&quot;##24107&quot; = (^)(β, 2)
-        var&quot;##24108&quot; = (*)(-0.5, var&quot;##24107&quot;)
-        var&quot;##24109&quot; = (*)(12351.829381805781, β)
-        var&quot;##24110&quot; = (*)(9913.26414391223, var&quot;##24107&quot;)
-        var&quot;##24111&quot; = (+)(114974.37815831495, var&quot;##24109&quot;, var&quot;##24110&quot;)
-        var&quot;##24112&quot; = (^)(σ, -2)
-        var&quot;##24113&quot; = (*)(-0.5, var&quot;##24111&quot;, var&quot;##24112&quot;)
-        var&quot;##24114&quot; = (+)(var&quot;##24104&quot;, var&quot;##24106&quot;, var&quot;##24108&quot;, var&quot;##24113&quot;)
+        var&quot;##25172&quot; = (*)(-1.0, σ)
+        var&quot;##25173&quot; = (log)(σ)
+        var&quot;##25174&quot; = (*)(-10000, var&quot;##25173&quot;)
+        var&quot;##25175&quot; = (^)(β, 2)
+        var&quot;##25176&quot; = (*)(-0.5, var&quot;##25175&quot;)
+        var&quot;##25177&quot; = (*)(12351.829381805781, β)
+        var&quot;##25178&quot; = (*)(9913.26414391223, var&quot;##25175&quot;)
+        var&quot;##25179&quot; = (+)(114974.37815831495, var&quot;##25177&quot;, var&quot;##25178&quot;)
+        var&quot;##25180&quot; = (^)(σ, -2)
+        var&quot;##25181&quot; = (*)(-0.5, var&quot;##25179&quot;, var&quot;##25180&quot;)
+        var&quot;##25182&quot; = (+)(var&quot;##25172&quot;, var&quot;##25174&quot;, var&quot;##25176&quot;, var&quot;##25181&quot;)
     end
 end</code></pre>
 <h1 id=accelerating_inference ><a href="#accelerating_inference">Accelerating Inference</a></h1>
 <p>After calling <code>symlogdensity</code> as above, you can manipulate the result however you like using <a href="https://github.com/JuliaSymbolics/SymbolicUtils.jl">SymbolicUtils.jl</a>. When you&#39;re happy with the result, it&#39;s easy to use this in inference. Here it is with Tamas Papp&#39;s <a href="https://github.com/tpapp/DynamicHMC.jl">DynamicHMC.jl</a>:</p>
 <pre><code class="julia hljs">postsample = dynamicHMC(post; ℓ=ℓ)</code></pre>
-<p>On my machine, this takes <strong>2.271 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
+<p>On my machine, this takes <strong>2.315 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
 <h1 id=when_does_this_work ><a href="#when_does_this_work">When Does This Work?</a></h1>
 <p>Cases where <code>symlogdensity</code> &quot;works&quot; in the sense of &quot;doesn&#39;t break&quot; are growing quickly; I expect that with some modest effort we can get to a point where every models gives <em>some</em> result that&#39;s at least as efficient as the direct approach.</p>
 <p>The great speedups we&#39;re seeing in this example come thanks in large part to the normal distribution &#40;for the observations&#41; is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations.</p>
