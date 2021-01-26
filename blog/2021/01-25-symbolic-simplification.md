@@ -2,7 +2,9 @@
 title = "Symbolic Simplication"
 hascode = true
 date = Date(2021,1,25)
-rss = "A short description of the page which would serve as blurb in a RSS feed; you can use basic markdown here but the whole description string must be a single line (not a multiline string). Like this one for instance. Keep in mind that styling is minimal in RSS so for instance don't expect maths or fancy styling to work; images should be ok though:"
+rss = "Upcoming features in Soss.jl include static model simplification. After a one-time compilation cost, posterior log-densities for many models become constant cost, independent of the number of observations. Bayesian analysis for such models can easily scale to big data."
+
+The symbolic representation of the posterior log-density can also be useful for pedagogical purposes."
 +++
 @def tags=["julia","probprog"]
 
