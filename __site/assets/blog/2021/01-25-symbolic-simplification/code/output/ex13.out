@@ -1,1 +1,1 @@
-(before, after, speedup) = (28.172061067, 2.027028042, 13.898209833941706)
+UndefVarError: dynamicHMC not defined

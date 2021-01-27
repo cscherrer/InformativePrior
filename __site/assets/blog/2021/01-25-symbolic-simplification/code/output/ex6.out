@@ -1,4 +1,1 @@
-trace.σ = 0.4935501632252856
-trace.β = 0.38268125183870566
-mean(y) = -0.006280819315773915
-std(y) = 0.626100319478254
+UndefVarError: trace not defined
