@@ -38,4 +38,4 @@ jobs:
           BRANCH: gh-preview # The branch where the PRs previews are stored
           FOLDER: __site
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_FOLDER: "{{ github.event.number }}" # The website preview is going to be stored in a subfolder
+          TARGET_FOLDER: "previews/PR${{ github.event.number }}" # The website preview is going to be stored in a subfolder
