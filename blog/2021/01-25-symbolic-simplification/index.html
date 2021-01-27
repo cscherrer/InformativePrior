@@ -122,7 +122,10 @@ end</code></pre>
 y &#61; trace.y</code></pre>
 
 <p>As a result, we now have</p>
-<pre><code class="plaintext">UndefVarError: trace not defined
+<pre><code class="plaintext">trace.σ = 2.514790065586358
+trace.β = 0.3455116692752362
+mean(y) = -0.005661941086852373
+std(y) = 2.5522129965847027
 </code></pre>
 <h2 id="evaluating_the_log-density_the_punchline"><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a></h2>
 <p>In Bayesian modeling, we&#39;re usually in a situation of having observed <code>y</code>, and wanting to infer what we can about latent parameters like <code>σ</code> and <code>β</code>. So let&#39;s construct the posterior distribution. We could write this as <code>post &#61; m&#40;x&#61;x, λ&#61;λ&#41; | &#40;y&#61;y,&#41;</code>, or using the shorthand</p>
@@ -130,50 +133,103 @@ y &#61; trace.y</code></pre>
 <p>To evaluate this, say on the <code>trace</code> from the original sample, we just call</p>
 <pre><code class="language-julia">logdensity&#40;post, trace&#41;</code></pre>
 <p>which in this case gives </p>
-<pre><code class="plaintext">UndefVarError: logdensity not defined
-</code></pre>
+<pre><code class="plaintext">-14278.315930335722</code></pre>
 <p>Let&#39;s see how fast it is.</p>
 <pre><code class="language-julia">using BenchmarkTools
 slow &#61; @benchmark &#36;logdensity&#40;&#36;post, &#36;trace&#41;</code></pre>
-<pre><code class="plaintext">ArgumentError: Package BenchmarkTools [6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf] is required but does not seem to be installed:
- - Run `Pkg.instantiate()` to install all recorded dependencies.
-
-</code></pre>
+<pre><code class="plaintext">BenchmarkTools.Trial: 
+  memory estimate:  1.07 MiB
+  allocs estimate:  60032
+  --------------
+  minimum time:     2.827 ms (0.00% GC)
+  median time:      2.910 ms (0.00% GC)
+  mean time:        3.097 ms (5.00% GC)
+  maximum time:     15.021 ms (77.28% GC)
+  --------------
+  samples:          1614
+  evals/sample:     1</code></pre>
 <p>Ok, clearly some things can be improved, for example we should be able to do this without allocation.</p>
 <p>But rather than dwell too much on that, let&#39;s jump to the punchline:</p>
 <pre><code class="language-julia">ℓ &#61; symlogdensity&#40;post&#41;
 f &#61; codegen&#40;post; ℓ&#61;ℓ&#41;
 fast &#61; @benchmark &#36;f&#40;&#36;&#40;;x,λ&#41;, &#36;&#40;;y&#41;, &#36;trace&#41;</code></pre>
-<pre><code class="plaintext">UndefVarError: symlogdensity not defined
-</code></pre>
+<pre><code class="plaintext">BenchmarkTools.Trial: 
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     88.141 ns (0.00% GC)
+  median time:      91.041 ns (0.00% GC)
+  mean time:        91.063 ns (0.00% GC)
+  maximum time:     114.859 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     957</code></pre>
 
-<p>Note the units; we started out in milliseconds, but now we&#39;re in nanoseconds. A quick <code>minimum&#40;slow&#41;.time / minimum&#40;fast&#41;.time</code> shows we&#39;ve gotten a UndefVarError: slow not defined.</p>
+<p>Note the units; we started out in milliseconds, but now we&#39;re in nanoseconds. A quick <code>minimum&#40;slow&#41;.time / minimum&#40;fast&#41;.time</code> shows we&#39;ve gotten a <strong>32075× speedup</strong>.</p>
 <h2 id="how_it_works"><a href="#how_it_works">How it Works</a></h2>
 <p><code>ℓ</code> is a symbolic expression from <a href="https://juliasymbolics.github.io/SymbolicUtils.jl/"><code>SymbolicUtils.jl</code></a>. To build it, we first generate a trace, as we did above. Now we have all of the types, so we can evaluate the log-density again, this time replacing the values with symbolic variables of the appropriate type.</p>
 <p>At this point, we have a symbolic expression, and we also have a dictionary of fixed values from the arguments and observed values. So we expand the expression and then walk the result, looking for subexpressions that evaluate to scalars with no free variables. When we find one, we use the dictionary to rewrite it.</p>
 <p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
 <pre><code class="language-julia">Soss.cse&#40;ℓ&#41;</code></pre>
-<pre><code class="plaintext">UndefVarError: Soss not defined
-</code></pre>
+<pre><code class="plaintext">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
+ Symbol("##1960") => -σ
+ Symbol("##1961") => log(σ)
+ Symbol("##1962") => -10000var"##1961"
+ Symbol("##1963") => β^2
+ Symbol("##1964") => -0.5var"##1963"
+ Symbol("##1965") => -6820.0864094810695β
+ Symbol("##1966") => 9612.144339734084var"##1963"
+ Symbol("##1967") => 65131.71858394731 + var"##1965" + var"##1966"
+ Symbol("##1968") => σ^-2
+ Symbol("##1969") => -0.5var"##1967"*var"##1968"
+ Symbol("##1970") => var"##1960" + var"##1962" + var"##1964" + var"##1969"</code></pre>
 <p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
 <pre><code class="language-julia">sourceCodegen&#40;post&#41;</code></pre>
-<pre><code class="plaintext">UndefVarError: sourceCodegen not defined
-</code></pre>
+<pre><code class="plaintext">quote
+    var"##2023" = (*)(-1.0, σ)
+    var"##2024" = (log)(σ)
+    var"##2025" = (*)(-10000, var"##2024")
+    var"##2026" = (^)(β, 2)
+    var"##2027" = (*)(-0.5, var"##2026")
+    var"##2028" = (*)(-6820.0864094810695, β)
+    var"##2029" = (*)(9612.144339734084, var"##2026")
+    var"##2030" = (+)(65131.71858394731, var"##2028", var"##2029")
+    var"##2031" = (^)(σ, -2)
+    var"##2032" = (*)(-0.5, var"##2030", var"##2031")
+    var"##2033" = (+)(var"##2023", var"##2025", var"##2027", var"##2032")
+end</code></pre>
 <p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
 <pre><code class="language-julia">codegen&#40;post; ℓ&#61;ℓ&#41;</code></pre>
-<pre><code class="plaintext">UndefVarError: ℓ not defined
-</code></pre>
+<pre><code class="plaintext">function = (_args, _data, _pars;) -> begin
+    begin
+        β = (Main.FD_SANDBOX_8265385389467078856).getproperty(_pars, :β)
+        σ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_pars, :σ)
+        y = (Main.FD_SANDBOX_8265385389467078856).getproperty(_data, :y)
+        λ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :λ)
+        x = (Main.FD_SANDBOX_8265385389467078856).getproperty(_args, :x)
+        var"##2122" = (*)(-1.0, σ)
+        var"##2123" = (log)(σ)
+        var"##2124" = (*)(-10000, var"##2123")
+        var"##2125" = (^)(β, 2)
+        var"##2126" = (*)(-0.5, var"##2125")
+        var"##2127" = (*)(-6820.0864094810695, β)
+        var"##2128" = (*)(9612.144339734084, var"##2125")
+        var"##2129" = (+)(65131.71858394731, var"##2127", var"##2128")
+        var"##2130" = (^)(σ, -2)
+        var"##2131" = (*)(-0.5, var"##2129", var"##2130")
+        var"##2132" = (+)(var"##2122", var"##2124", var"##2126", var"##2131")
+    end
+end</code></pre>
 <h1 id="accelerating_inference"><a href="#accelerating_inference">Accelerating Inference</a></h1>
 <p>After calling <code>symlogdensity</code> as above, you can manipulate the result however you like using <a href="https://github.com/JuliaSymbolics/SymbolicUtils.jl">SymbolicUtils.jl</a>. When you&#39;re happy with the result, it&#39;s easy to use this in inference. Here it is with Tamas Papp&#39;s <a href="https://github.com/tpapp/DynamicHMC.jl">DynamicHMC.jl</a>:</p>
 <pre><code class="language-julia">postsample &#61; dynamicHMC&#40;post; ℓ&#61;ℓ&#41;</code></pre>
-<p>On my machine, this takes <strong>UndefVarError: ℓ not defined seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
+<p>On my machine, this takes <strong>2.279 seconds</strong>. Not bad for MCMC on 10,000 observations.</p>
 <h1 id="limiting_inlining"><a href="#limiting_inlining">Limiting Inlining</a></h1>
 <p>In the above example, we took every opportunity for <a href="https://en.wikipedia.org/wiki/Constant_folding">constant folding</a>, as long as the result is a scalar. In some cases, that might be too much. For example, we expect to be able to use this approach to also accelerate <a href="https://en.wikipedia.org/wiki/Variational_Bayesian_methods">variational inference</a>, in which case we ought to avoid recompiling every time we change the variational parameters.</p>
 <p>To account for this, we have a <code>noinline</code> switch that allows specification of variables to leave alone. For example,</p>
 <pre><code class="language-julia">ℓλ &#61; symlogdensity&#40;post; noinline&#61;&#40;:λ,&#41;&#41;</code></pre>
 <p>which results in </p>
-<pre><code class="plaintext">UndefVarError: symlogdensity not defined
-</code></pre>
+<pre><code class="plaintext">log(λ) - 10000log(σ) - 0.5(β^2) - λ*σ - 0.5(65131.71858394747 + (9612.144339734094(β^2)) - (6820.086409481088β))*(σ^-2)</code></pre>
 <h1 id="when_does_this_work"><a href="#when_does_this_work">When Does This Work?</a></h1>
 <p>Cases where <code>symlogdensity</code> &quot;works&quot; in the sense of &quot;doesn&#39;t break&quot; are growing quickly; I expect that with some modest effort we can get to a point where every models gives <em>some</em> result that&#39;s at least as efficient as the direct approach.</p>
 <p>The great speedups we&#39;re seeing in this example come thanks in large part to the normal distribution &#40;for the observations&#41; is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations. The most obvious applicability I see is for <a href="https://en.wikipedia.org/wiki/Generalized_linear_model">generalized linear models</a>.</p>
@@ -190,7 +246,7 @@ after &#61; @elapsed dynamicHMC&#40;post; ℓ&#61;ℓ&#41;
 speedup &#61; before / after
 
 @show before, after, speedup</code></pre>
-<pre><code class="plaintext">UndefVarError: dynamicHMC not defined
+<pre><code class="plaintext">(before, after, speedup) = (26.189038814, 2.212072206, 11.839142837636647)
 </code></pre>
 <p>The result is not nearly as dramatic as we saw for evaluation, but it&#39;s still substantial. Like all the best questions, the answer to this one raises plenty more questions, which we&#39;ll look into another time.</p>
 <h2 id="related_research"><a href="#related_research">Related Research</a></h2>
