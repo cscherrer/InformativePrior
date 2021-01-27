@@ -11,8 +11,11 @@ The website_* must be defined for the RSS to work
 
 @def mintoclevel = 2
 
-@def prepath     = get(ENV, "PREVIEW_FRANKLIN_PREPATH", "") # In the third argument put the prepath you normally use
-@def website_url = get(ENV, "PREVIEW_FRANKLIN_WEBSITE_URL", "informativeprior.com") # Just put the website name
+@def prepath = ""
+@def website_url = "https://informativeprior.com"
+
+<!-- @def prepath     = get(ENV, "PREVIEW_FRANKLIN_PREPATH", "") # In the third argument put the prepath you normally use
+@def website_url = get(ENV, "PREVIEW_FRANKLIN_WEBSITE_URL", "https://informativeprior.com/") # Just put the website name -->
 
 <!--
 Add here files or directories that should be ignored by Franklin, otherwise

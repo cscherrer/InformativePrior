@@ -1,5 +1,5 @@
 .DS_Store
-franklin
-franklin.pub
+.vscode/
 node_modules/
 __site/
+Manifest.toml
