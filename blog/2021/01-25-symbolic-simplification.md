@@ -159,13 +159,13 @@ In the above example, we took every opportunity for [constant folding](https://e
 
 To account for this, we have a `noinline` switch that allows specification of variables to leave alone. For example,
 
-```julia:ex12
+```julia:ex16
 ℓλ = symlogdensity(post; noinline=(:λ,))
 ```
 
 which results in 
 
-\show{ex12}
+\show{ex16}
 
 # When Does This Work?
 
@@ -185,7 +185,7 @@ On Twitter, Colin Carroll had a great question:
 
 [Franklin re-runs the code, so the timings will vary a bit]
 
-```julia:ex13
+```julia:ex17
 before = @elapsed dynamicHMC(post)
 after = @elapsed dynamicHMC(post; ℓ=ℓ)
 
@@ -194,7 +194,7 @@ speedup = before / after
 @show before, after, speedup
 ```
 
-\show{ex13}
+\show{ex17}
 
 The result is not nearly as dramatic as we saw for evaluation, but it's still substantial. Like all the best questions, the answer to this one raises plenty more questions, which we'll look into another time.
 
