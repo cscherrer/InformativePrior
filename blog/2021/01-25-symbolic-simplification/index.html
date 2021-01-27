@@ -98,8 +98,7 @@
 <p><em>January 25, 2021</em></p>
 <p><em>Upcoming features in <a href="https://github.com/cscherrer/Soss.jl">Soss.jl</a> include static model simplification. After a one-time compilation cost, posterior log-densities for many models become &quot;constant cost&quot;, independent of the number of observations. Bayesian analysis for such models can easily scale to big data.</em></p>
 <p><em>The symbolic representation of the posterior log-density can also be useful for pedagogical purposes.</em></p>
-<p>NOTE: SOME THINGS BROKE TEMPORARILY, SHOULD BE BACK TO NORMAL IN A FEW HOURS. 
-  <div class="franklin-toc"><ol><li><a href="#first_a_model">First, a Model</a></li><li><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a></li><li><a href="#how_it_works">How it Works</a></li><li><a href="#hmc_timing">HMC Timing</a></li><li><a href="#related_research">Related Research</a></li><li><a href="#final_thoughts">Final Thoughts</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#first_a_model">First, a Model</a></li><li><a href="#evaluating_the_log-density_the_punchline">Evaluating the Log-Density &#40;The Punchline&#41;</a></li><li><a href="#how_it_works">How it Works</a></li><li><a href="#hmc_timing">HMC Timing</a></li><li><a href="#related_research">Related Research</a></li><li><a href="#final_thoughts">Final Thoughts</a></li></ol></div>
 <h2 id="first_a_model"><a href="#first_a_model">First, a Model</a></h2>
 <p>Let&#39;s start with something simple, say a linear regression with 10,000 observations.</p>
 <pre><code class="language-julia">using Soss
@@ -136,8 +135,8 @@ y &#61; trace.y</code></pre>
 <p>Let&#39;s see how fast it is.</p>
 <pre><code class="language-julia">using BenchmarkTools
 slow &#61; @benchmark &#36;logdensity&#40;&#36;post, &#36;trace&#41;</code></pre>
-<pre><code class="plaintext">ArgumentError: Package BenchmarkTools not found in current path:
-- Run `import Pkg; Pkg.add("BenchmarkTools")` to install the BenchmarkTools package.
+<pre><code class="plaintext">ArgumentError: Package BenchmarkTools [6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf] is required but does not seem to be installed:
+ - Run `Pkg.instantiate()` to install all recorded dependencies.
 
 </code></pre>
 <p>Ok, clearly some things can be improved, for example we should be able to do this without allocation.</p>
