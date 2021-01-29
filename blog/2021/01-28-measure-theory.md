@@ -188,30 +188,65 @@ rand(Normal())
 
 ## Performance
 
-```julia
+Let's set up a little benchmark. Given some arrays
+
+```julia:randarrays
+μ = randn(1000)
+σ = rand(1000)
 x = randn(1000)
 y = randn(1000)
+```
 
-function time_normal(y, x, d)
-    for i in eachindex(x)
-        @inbounds y[i] = logdensity(d, x[i])
+For each `i`, we'll
+1. Build a `Normal(μ[i], σ[i])`
+2. Evaluate the log-density of this at `x[i]`
+3. Store the result in `y[i]`
+
+We should expect big time differences for this versus a standard normal, so let's also measure this with fixed `μ`, fixed `σ`, and with both fixed. The only thing we really need to vary is the way we build the distribution or measure. So we can do this:
+
+```julia:time_normal
+using BenchmarkTools
+
+function array_work(f, μ, σ, x, y)
+    @inbounds for i in eachindex(x)
+        y[i] = logdensity(f(μ[i], σ[i]), x[i])
     end
 end
 
-using MeasureTheory, BenchmarkTools
-
-dtime = @belapsed time_normal($y, $x, $(Dists.Normal(0.2,0.5)))
-mtime = @belapsed time_normal($y, $x, $(Normal(0.2,0.5)))
-
-@show dtime #hide
-@show mtime #hide
+time_normal(f) = @belapsed $array_work($f, $μ, $σ, $x, $y)
 ```
 
-\show{blah}
-<!-- 
-\show{dtime}
+The we can get the timings like this:
 
-\show{mtime} -->
-<!-- 
-speedup = round(Int,minimum(slow).time / minimum(fast).time) #hide
-print("**$speedup× speedup**") #hide -->
+```julia:gettimes
+mμσ = time_normal((μ,σ) -> Normal(μ,σ)) 
+dμσ = time_normal((μ,σ) -> Dists.Normal(μ,σ; check_args=false))
+
+mμ1 = time_normal((μ,σ) -> Normal(μ=μ)) 
+dμ1 = time_normal((μ,σ) -> Dists.Normal(μ,1.0; check_args=false))
+
+m0σ = time_normal((μ,σ) -> Normal(σ=σ)) 
+d0σ = time_normal((μ,σ) -> Dists.Normal(0.0,σ; check_args=false))
+
+m01 = time_normal((μ,σ) -> Normal())
+d01 = time_normal((μ,σ) -> Dists.Normal())
+```
+
+And finally, a plot:
+
+```julia:plottimes
+using StatsPlots
+
+times_d = [dμσ, dμ1, d0σ, d01]
+times_m = [mμσ, mμ1, m0σ, m01]
+
+times = [times_d ;times_m] / 1e3 * 1e9
+
+pkg = repeat(["Distributions.jl", "MeasureTheory.jl"], inner=4)
+dist = repeat(["Normal(μ,σ)", "Normal(μ,1)", "Normal(0,σ)", "Normal(0,1)"], outer=2)
+groupedbar(dist, times, group=pkg, legend=:topleft)
+ylabel!("Time per element (ns)")
+savefig(joinpath(@OUTPUT, "dists-measuretheory-times.svg")) # hide
+```
+
+\fig{dists-measuretheory-times}
