@@ -16,5 +16,5 @@ jobs:
       env:
         REPO: self
         BRANCH: gh-pages
-        FOLDER: __site
+        FOLDER: __production
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
