@@ -1,0 +1,25 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title><![CDATA[Informative Prior]]></title>
+  <description><![CDATA[Probabilistic Modeling in Julia
+]]></description>
+  <link>https://informativeprior.com/</link>
+  <atom:link href="https://informativeprior.com/feed.xml" rel="self" type="application/rss+xml" />
+  <item>
+    <title><![CDATA[Measure Theory for Probabilistic Modeling]]></title>
+    <link>https://informativeprior.com/blog/2021/01-28-measure-theory/</link>
+    <description><![CDATA[Modern probabilistic modeling puts strong demands on the interface and implementation of libraries for probability distributions. MeasureTheory.jl is an effort to address limitations of existing libraries. In this post, we&#39;ll motivate the need for a new library and give an overview of the approach and its benefits.
+<br><a href="https://informativeprior.com/blog/2021/01-28-measure-theory/">Read more</a>]]></description>
+    <guid>https://informativeprior.com/blog/2021/01-28-measure-theory/</guid>
+    <pubDate>Fri, 29 Jan 2021 00:00:00 UT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Symbolic Simplification]]></title>
+    <link>https://informativeprior.com/blog/2021/01-25-symbolic-simplification/</link>
+    <description><![CDATA[Upcoming features in Soss.jl include static model simplification. After a one-time compilation cost, posterior log-densities for many models become constant cost, independent of the number of observations. Bayesian analysis for such models can easily scale to big data. The symbolic representation of the posterior log-density can also be useful for pedagogical purposes.
+<br><a href="https://informativeprior.com/blog/2021/01-25-symbolic-simplification/">Read more</a>]]></description>
+    <guid>https://informativeprior.com/blog/2021/01-25-symbolic-simplification/</guid>
+    <pubDate>Mon, 25 Jan 2021 00:00:00 UT</pubDate>
+  </item>
+</channel>
+</rss>
