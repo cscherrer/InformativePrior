@@ -1,5 +1,5 @@
 .DS_Store
 .vscode/
-__site/
+# __site/
 node_modules/
 Manifest.toml
