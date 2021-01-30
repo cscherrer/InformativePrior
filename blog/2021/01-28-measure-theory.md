@@ -250,3 +250,15 @@ savefig(joinpath(@OUTPUT, "dists-measuretheory-times.svg")) # hide
 ```
 
 \fig{dists-measuretheory-times}
+
+## Final Notes
+
+We've really only scratched the surface of MeasureTheory.jl. There's also
+- Multiple parameterizations for a given measure
+- Using measures for "improper priors"
+- Radon-Nikodym derivatives
+- Singular measures, like spike and slab priors
+- Markov kernels
+
+The library is still changing quickly, and we'd love to have more community involvement. Please check it out!
+https://github.com/cscherrer/MeasureTheory.jl
