@@ -42,13 +42,13 @@ basemeasure(Normal())</code></pre><pre><code class="plaintext hljs">0.398942 * L
 <h3 id=baserandrngrandomabstractrng_ttype_dnormal_randnrng_t ><a href="#baserandrngrandomabstractrng_ttype_dnormal_randnrng_t"><code>Base.rand&#40;rng::Random.AbstractRNG, T::Type, d::Normal&#123;&#40;&#41;&#125;&#41; &#61; randn&#40;rng, T&#41;</code></a></h3>
 <p>Hopefully this one is clear. One fine point worth mentioning is that some dispatch happening outside of this gives us some methods for free. So for example, we could do</p>
 <pre><code class="julia hljs">rng = Random.GLOBAL_RNG
-rand(rng, <span class=hljs-built_in >Float32</span>, Normal())</code></pre><pre><code class="plaintext hljs">-0.08732448f0</code></pre>
+rand(rng, <span class=hljs-built_in >Float32</span>, Normal())</code></pre><pre><code class="plaintext hljs">0.592597f0</code></pre>
 <p>but also</p>
-<pre><code class="julia hljs">rand(rng, Normal())</code></pre><pre><code class="plaintext hljs">-0.15835985762090132</code></pre>
+<pre><code class="julia hljs">rand(rng, Normal())</code></pre><pre><code class="plaintext hljs">0.11753554778470514</code></pre>
 <p>or</p>
-<pre><code class="julia hljs">rand(<span class=hljs-built_in >Float16</span>, Normal())</code></pre><pre><code class="plaintext hljs">Float16(-0.305)</code></pre>
+<pre><code class="julia hljs">rand(<span class=hljs-built_in >Float16</span>, Normal())</code></pre><pre><code class="plaintext hljs">Float16(-0.685)</code></pre>
 <p>or just</p>
-<pre><code class="julia hljs">rand(Normal())</code></pre><pre><code class="plaintext hljs">0.5264745621612317</code></pre>
+<pre><code class="julia hljs">rand(Normal())</code></pre><pre><code class="plaintext hljs">-1.6944140545063775</code></pre>
 <h3 id="μσ_methods_normal"><a href="#μσ_methods_normal"><code>@μσ_methods Normal&#40;&#41;</code></a></h3>
 <h2 id=performance ><a href="#performance">Performance</a></h2>
 <p>Let&#39;s set up a little benchmark. Given some arrays</p>
@@ -114,7 +114,8 @@ ylabel!(<span class=hljs-string >&quot;Time per element (ns)&quot;</span>)</code
 <li><p>Markov kernels</p>
 
 </ul>
-<p>The library is still changing quickly, and we&#39;d love to have more community involvement. Please check it out&#33; https://github.com/cscherrer/MeasureTheory.jl</p>
+<p>The library is still changing quickly, and we&#39;d love to have more community involvement. Please check it out&#33;</p>
+<p><a href="https://github.com/cscherrer/MeasureTheory.jl">https://github.com/cscherrer/MeasureTheory.jl</a></p>
 <div class=page-foot >
   <div class=copyright >
     &copy; Chad Scherrer. Last modified: January 30, 2021. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
