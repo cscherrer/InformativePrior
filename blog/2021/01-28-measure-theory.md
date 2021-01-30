@@ -261,4 +261,5 @@ We've really only scratched the surface of MeasureTheory.jl. There's also
 - Markov kernels
 
 The library is still changing quickly, and we'd love to have more community involvement. Please check it out!
-https://github.com/cscherrer/MeasureTheory.jl
+
+[https://github.com/cscherrer/MeasureTheory.jl](https://github.com/cscherrer/MeasureTheory.jl)

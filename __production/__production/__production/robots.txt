@@ -1,4 +1,0 @@
-Sitemap: https://informativeprior.com/sitemap.xml
-
-User-agent: *
-Disallow:

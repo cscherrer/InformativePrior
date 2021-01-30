@@ -1,1 +1,0 @@
-time_normal (generic function with 1 method)
