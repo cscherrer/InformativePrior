@@ -239,7 +239,7 @@ And adding more is easy! Here are a few that might be convenient, depending on t
 Let's set up a little benchmark. Given some arrays
 
 ```julia:randarrays
-μ = randn(1000)
+μ = randn(1000) 
 σ = rand(1000)
 x = randn(1000)
 y = randn(1000)
@@ -258,7 +258,7 @@ using BenchmarkTools
 function array_work(f, μ, σ, x, y)
     @inbounds for i in eachindex(x)
         y[i] = logdensity(f(μ[i], σ[i]), x[i])
-    end
+    end 
 end
 
 time_normal(f) = @belapsed $array_work($f, $μ, $σ, $x, $y)
@@ -271,7 +271,7 @@ mμσ = time_normal((μ,σ) -> Normal(μ,σ))
 dμσ = time_normal((μ,σ) -> Dists.Normal(μ,σ; check_args=false))
 
 mμ1 = time_normal((μ,σ) -> Normal(μ=μ)) 
-dμ1 = time_normal((μ,σ) -> Dists.Normal(μ,1.0; check_args=false))
+dμ1 = time_normal((μ,σ) -> Dists.Normal(μ))
 
 m0σ = time_normal((μ,σ) -> Normal(σ=σ)) 
 d0σ = time_normal((μ,σ) -> Dists.Normal(0.0,σ; check_args=false))
@@ -280,7 +280,9 @@ m01 = time_normal((μ,σ) -> Normal())
 d01 = time_normal((μ,σ) -> Dists.Normal())
 ```
 
-And finally, a plot:
+Note here that there are a few different ways of calling this (thanks to David Widmann for pointing out the `Dists.Normal(μ)` method). Also, as mentioned above, the `check_args` keyword argument makes things a little faster in some cases, but throws an error in others.
+
+Finally, a plot:
 
 ```julia:plottimes
 using StatsPlots
@@ -298,6 +300,12 @@ savefig(joinpath(@OUTPUT, "dists-measuretheory-times.svg")) # hide
 ```
 
 \fig{dists-measuretheory-times}
+
+To be clear, Distributions is doing a little more work here, since it's including the normalization constant at each step. But that's exactly the point! For many computations like MCMC, there's no need to do this. Also, we're not really throwing away this constant; we can recover it later if we like by asking for the log-density with respect to Lebesgue measure.
+
+If Distributions had a way to do this without including the normalization, that might be a more fair comparison. But it doesn't, so if you're choosing between Distributions and MeasureTheory for MCMC, the plot above is a reasonable representation of the core log-density computation.
+
+Also worth noting is that gradient computations are often important for this work. MeasureTheory is designed to be relatively autodiff-friendly, by representing the log-density as a simple algebraic expression. For Distributions this is definitely not the case, and making AD work well required an entirely separate and significant effort, [DistributionsAD.jl](https://github.com/TuringLang/DistributionsAD.jl).
 
 ## Final Notes
 
