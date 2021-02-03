@@ -42,13 +42,13 @@ basemeasure(Normal())</code></pre><pre><code class="plaintext hljs">0.398942 * L
 <h3 id=baserandrngrandomabstractrng_ttype_dnormal_randnrng_t ><a href="#baserandrngrandomabstractrng_ttype_dnormal_randnrng_t"><code>Base.rand&#40;rng::Random.AbstractRNG, T::Type, d::Normal&#123;&#40;&#41;&#125;&#41; &#61; randn&#40;rng, T&#41;</code></a></h3>
 <p>Hopefully this one is clear. One fine point worth mentioning is that some dispatch happening outside of this gives us some methods for free. So for example, we could do</p>
 <pre><code class="julia hljs">rng = Random.GLOBAL_RNG
-rand(rng, <span class=hljs-built_in >Float32</span>, Normal())</code></pre><pre><code class="plaintext hljs">-0.41565442f0</code></pre>
+rand(rng, <span class=hljs-built_in >Float32</span>, Normal())</code></pre><pre><code class="plaintext hljs">-1.523651f0</code></pre>
 <p>but also</p>
-<pre><code class="julia hljs">rand(rng, Normal())</code></pre><pre><code class="plaintext hljs">-0.8031199165971641</code></pre>
+<pre><code class="julia hljs">rand(rng, Normal())</code></pre><pre><code class="plaintext hljs">0.22558175089484894</code></pre>
 <p>or</p>
-<pre><code class="julia hljs">rand(<span class=hljs-built_in >Float16</span>, Normal())</code></pre><pre><code class="plaintext hljs">Float16(0.209)</code></pre>
+<pre><code class="julia hljs">rand(<span class=hljs-built_in >Float16</span>, Normal())</code></pre><pre><code class="plaintext hljs">Float16(0.631)</code></pre>
 <p>or just</p>
-<pre><code class="julia hljs">rand(Normal())</code></pre><pre><code class="plaintext hljs">0.8719638344592577</code></pre>
+<pre><code class="julia hljs">rand(Normal())</code></pre><pre><code class="plaintext hljs">1.566945776473056</code></pre>
 <h3 id="μσ_methods_normal"><a href="#μσ_methods_normal"><code>@μσ_methods Normal&#40;&#41;</code></a></h3>
 <p>This is our last line, and we still haven&#39;t touched anything outside a standard normal &#40;mean zero, standard deviation one&#41;.</p>
 <p>But there&#39;s nothing about this last step that&#39;s specific to normal distributions; it&#39;s just one example of a <a href="https://en.wikipedia.org/wiki/Location&#37;E2&#37;80&#37;93scale_family">location-scale family</a>. There&#39;s so much common behavior here across distributions, we should be able to abstract it.</p>
