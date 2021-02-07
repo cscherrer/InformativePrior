@@ -1,4 +1,4 @@
-# Here's the Blog
+# Blog
 
 [Symbolic Simplification](2021/01-25-symbolic-simplification)
 
