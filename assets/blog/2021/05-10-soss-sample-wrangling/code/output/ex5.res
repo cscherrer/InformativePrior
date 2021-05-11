@@ -1,0 +1,2 @@
+1000-element TupleVector with schema (trace = (x = Vector{Float64}, y = Vector{Float64}, α = Float64, β = Float64, σ = Float64), value = Vector{Float64})
+(trace = (x = [0.02±0.95, 0.07±0.99, 0.0±0.97], y = [-0.06±1.9, 0.04±1.9, -0.0±2.0], α = -0.001±0.97, β = 0.02±1.0, σ = 1.0±1.0), value = [-0.06±1.9, 0.04±1.9, -0.0±2.0])
