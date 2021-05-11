@@ -71,7 +71,7 @@ It can be handy to make the names of a `TupleVector` available as variables, tra
 mytrace = mysim.trace
 @with mytrace begin
     Ey = α .+ β .* x
-    r = y - Ey
+    r = (y - Ey) / σ
     (;Ey, r)
 end
 ```

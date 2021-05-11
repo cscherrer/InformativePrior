@@ -2,6 +2,6 @@
 mytrace = mysim.trace
 @with mytrace begin
     Ey = α .+ β .* x
-    r = y - Ey
+    r = (y - Ey) / σ
     (;Ey, r)
 end
