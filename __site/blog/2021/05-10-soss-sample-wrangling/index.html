@@ -1,0 +1,191 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.16.4 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en">
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PYLMFWW0P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    gtag('config', 'G-3PYLMFWW0P');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+   <link rel="stylesheet" href="/libs/highlight/github.min.css">
+   
+  <link rel="stylesheet" href="/css/franklin.css">
+<link rel="stylesheet" href="/css/minimal-mistakes.css">
+<link rel="stylesheet" href="/css/adjust.css">
+<link rel="icon" href="/assets/favicon.png">
+<!--[if IE ]>
+<style>
+  /* old IE unsupported flexbox fixes */
+  .greedy-nav .site-title {
+    padding-right: 3em;
+  }
+  .greedy-nav button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+  }
+</style>
+<![endif]-->
+
+   <title>Blurb: Forward Sample Exploration in Soss</title>  
+
+  <!-- end custom head snippets -->
+</head>
+<body class="layout--single">
+  <div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <a class="site-title" href="/">Informative Prior</a>
+        <ul class="visible-links">
+          <li class="masthead__menu-item"><a href="/about-us/" >About Us</a></li>
+          <li class="masthead__menu-item"><a href="/blog/" >Blog</a></li>
+        </ul>
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="initial-content">
+    <div id="main" role="main">
+      <div class="sidebar sticky">
+        <div itemscope itemtype="https://schema.org/Person">
+          <div class="author__avatar">
+            <img src="/assets/chad-avatar.jpg" alt="Chad Scherrer" itemprop="image">
+          </div>
+          <div class="author__content">
+            <h3 class="author__name" itemprop="name">Chad Scherrer</h3>
+            <p class="author__bio" itemprop="description">Founder</p>
+          </div>
+          <div class="author__urls-wrapper">
+            <button class="btn btn--inverse">Follow</button>
+            <ul class="author__urls social-icons">
+              <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+                <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Seattle, WA</span></li>
+              <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+              <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+
+<!-- Content appended here -->
+<div class="franklin-content">
+<h1 id="title"><a href="#title" class="header-anchor">Blurb: Forward Sample Exploration in Soss</a></h1>
+<p><em>May 10, 2021</em></p>
+<p><em>Over the past few months, we&#39;ve made some big improvements to our tools for working with samples in Soss. This short post gives an update.</em></p>
+<p>Say you have a linear model</p>
+<pre><code class="language-julia">using Soss
+using MeasureTheory
+using TupleVectors
+
+m &#61; @model n begin
+    α ~ Normal&#40;&#41;
+    β ~ Normal&#40;&#41;
+    x ~ Normal&#40;&#41; |&gt; iid&#40;n&#41;
+    σ ~ Exponential&#40;λ&#61;1&#41;
+    y ~ For&#40;x&#41; do xj
+        Normal&#40;α &#43; β * xj, σ&#41;
+    end
+    return y
+end</code></pre>
+<p>You can &quot;run&quot; the model like this:</p>
+<pre><code class="language-julia">rand&#40;m&#40;3&#41;&#41;</code></pre>
+<pre><code class="plaintext">3-element Vector{Float64}:
+ -1.3481528254815156
+ -0.8467839966758355
+ -3.2793581323670113</code></pre>
+<p>If you want more &#40;iid&#41; samples from the model, you can do</p>
+<pre><code class="language-julia">rand&#40;m&#40;3&#41;,5&#41;</code></pre>
+<pre><code class="plaintext">5-element ArraysOfArrays.ArrayOfSimilarArrays{Float64, 1, 1, 2, ElasticArrays.ElasticMatrix{Float64, 1, Vector{Float64}}}:
+ [-0.5801870698412048, -0.7831790492917818, -3.694601328454099]
+ [2.0979335431889803, 3.5630270546059557, 2.769652054248688]
+ [-3.1107934379484066, -2.6920071046722596, -2.1705448322142686]
+ [1.208651101972964, 1.7374231087644396, 2.2250207982499965]
+ [1.4589264372159674, 1.2845073278482224, 1.3285317115334254]</code></pre>
+<p>Note the <code>ArraysOfArrays</code>. The underlying storage is a single <code>Matrix</code>. Still, this quickly becomes a wall of numbers that&#39;s hard to track. We&#39;ll  be adding more tools to make <code>rand</code> output easy to work with &#40;Note to self...&#41;. But for now, let&#39;s compare <code>simulate</code>:</p>
+<pre><code class="language-julia">simulate&#40;m&#40;3&#41;, 5&#41;</code></pre>
+<pre><code class="plaintext">5-element TupleVector with schema (trace = (x = Vector{Float64}, y = Vector{Float64}, α = Float64, β = Float64, σ = Float64), value = Vector{Float64})
+(trace = (x = [-0.51±2.0, -0.58±1.3, -0.13±0.72], y = [-0.43±1.7, -0.54±1.0, 0.05±1.1], α = -0.1±0.72, β = -0.37±0.91, σ = 0.64±0.54), value = [-0.43±1.7, -0.54±1.0, 0.05±1.1])</code></pre>
+<p>Much better&#33; Now we can easily do things like</p>
+<pre><code class="language-julia">mysim &#61; simulate&#40;m&#40;3&#41;, 1000&#41;</code></pre>
+<pre><code class="plaintext">1000-element TupleVector with schema (trace = (x = Vector{Float64}, y = Vector{Float64}, α = Float64, β = Float64, σ = Float64), value = Vector{Float64})
+(trace = (x = [0.02±0.95, 0.07±0.99, 0.0±0.97], y = [-0.06±1.9, 0.04±1.9, -0.0±2.0], α = -0.001±0.97, β = 0.02±1.0, σ = 1.0±1.0), value = [-0.06±1.9, 0.04±1.9, -0.0±2.0])</code></pre>
+<p>Just to be clear, what we&#39;re looking at here is a summary of 1000 samples. Here&#39;s one of them:</p>
+<pre><code class="language-julia">mysim&#91;1&#93;</code></pre>
+<pre><code class="plaintext">(trace = (x = [0.30021947827881323, -1.7858459256694803, 1.077205113757541], y = [0.6374538286688411, -5.9348120120560885, 0.7044161798044803], α = -0.4563348174767442, β = 2.0661080442940025, σ = 0.8741722654925329), value = [0.6374538286688411, -5.9348120120560885, 0.7044161798044803])</code></pre>
+<p>It can be handy to make the names of a <code>TupleVector</code> available as variables, transform them, and then wrap the result into a new <code>TupleVector</code>. For that, we have <code>@with</code>. Here are the expected <code>y</code> values and studentized residuals</p>
+<pre><code class="language-julia">mytrace &#61; mysim.trace
+@with mytrace begin
+    Ey &#61; α .&#43; β .* x
+    r &#61; y - Ey
+    &#40;;Ey, r&#41;
+end</code></pre>
+<pre><code class="plaintext">1000-element TupleVector with schema (Ey = Vector{Float64}, r = Vector{Float64})
+(Ey = [-0.0±1.4, -0.04±1.4, 0.0±1.3], r = [-0.04±1.3, 0.08±1.3, -0.04±1.5])</code></pre>
+<p>We could even be a little fancy and do </p>
+<pre><code class="language-julia">@with mysim begin
+    @with trace begin
+        Ey &#61; α .&#43; β .* x
+        r &#61; &#40;y - Ey&#41; / σ
+        &#40;;Ey, r&#41;
+    end
+end</code></pre>
+<pre><code class="plaintext">1000-element TupleVector with schema (Ey = Vector{Float64}, r = Vector{Float64})
+(Ey = [-0.0±1.4, -0.04±1.4, 0.0±1.3], r = [0.03±1.0, 0.06±0.96, 0.0±1.1])</code></pre>
+<p>You can do this with posterior samples too&#33; Let&#39;s save that one for next time.</p>
+<div class="page-foot">
+  <div class="copyright">
+    &copy; Chad Scherrer. Last modified: May 11, 2021. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+  </div>
+</div>
+</div><!-- CONTENT ENDS HERE -->
+
+      </div> <!-- closure of main -->
+    </div>   <!-- closure of class initial--content -->
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+        <!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+          <ul class="social-icons">
+            <li><strong>Follow:</strong></li>
+            <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+            <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          </ul>
+        </div>
+        <div class="page__footer-copyright">&copy; 2021 Chad Scherrer. Powered by <a href="https://github.com/tlienart/Franklin.jl">Franklin</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+      </footer>
+    </div>
+
+    <script src="/libs/minimal-mistakes/main.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js" integrity="sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH" crossorigin="anonymous"></script>
+
+    
+    
+        <script src="/libs/highlight/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();hljs.configure({tabReplace: '    '});</script>
+
+    
+  </body>
+</html>

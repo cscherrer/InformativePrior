@@ -1,16 +1,16 @@
 +++
 title = "Measure Theory for Probabilistic Modeling"
 hascode = true
-rss = "Modern probabilistic modeling puts strong demands on the interface and implementation of libraries for probability distributions. MeasureTheory.jl is an effort to address limitations of existing libraries. In this post, we'll motivate the need for a new library and give an overview of the approach and its benefits."
+
 +++
 @def date = Date(2021,1,29)
 @def rss_pubdate = Date(2021,1,29)
 @def tags=["julia","probprog"]
-
+@def rss = "Modern probabilistic modeling puts strong demands on the interface and implementation of libraries for probability distributions. MeasureTheory.jl is an effort to address limitations of existing libraries. In this post, we'll motivate the need for a new library and give an overview of the approach and its benefits."
 # {{ title }}
 _January 29, 2021_
 
-_{{ rss }}_
+_Modern probabilistic modeling puts strong demands on the interface and implementation of libraries for probability distributions. MeasureTheory.jl is an effort to address limitations of existing libraries. In this post, we'll motivate the need for a new library and give an overview of the approach and its benefits._
 
 **Contents**
 

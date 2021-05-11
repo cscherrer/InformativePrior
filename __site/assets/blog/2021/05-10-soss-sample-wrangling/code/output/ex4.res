@@ -1,0 +1,2 @@
+5-element TupleVector with schema (trace = (x = Vector{Float64}, y = Vector{Float64}, α = Float64, β = Float64, σ = Float64), value = Vector{Float64})
+(trace = (x = [-0.51±2.0, -0.58±1.3, -0.13±0.72], y = [-0.43±1.7, -0.54±1.0, 0.05±1.1], α = -0.1±0.72, β = -0.37±0.91, σ = 0.64±0.54), value = [-0.43±1.7, -0.54±1.0, 0.05±1.1])
