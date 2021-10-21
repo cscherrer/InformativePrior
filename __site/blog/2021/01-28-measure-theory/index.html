@@ -181,26 +181,26 @@ Base.rand&#40;rng::Random.AbstractRNG, T::Type, d::Normal&#123;&#40;&#41;&#125;&
 </blockquote>
 <p>So then for example,</p>
 <pre><code class="language-julia">using MeasureTheory
-basemeasure&#40;Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext">0.398942 * Lebesgue(ℝ)</code></pre>
+basemeasure&#40;Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext code-output">0.398942 * Lebesgue(ℝ)</code></pre>
 <p>and</p>
-<pre><code class="language-julia">Normal&#40;&#41; ≪ Lebesgue&#40;ℝ&#41;</code></pre><pre><code class="plaintext">true</code></pre>
+<pre><code class="language-julia">Normal&#40;&#41; ≪ Lebesgue&#40;ℝ&#41;</code></pre><pre><code class="plaintext code-output">true</code></pre>
 <h3 id="logdensitydnormal_x_-_x2_2"><a href="#logdensitydnormal_x_-_x2_2" class="header-anchor"><code>logdensity&#40;d::Normal&#123;&#40;&#41;&#125; , x&#41; &#61; - x^2 / 2</code></a></h3>
 <p>This defines the log-density relative to the base measure. There&#39;s no <code>μ</code> or <code>σ</code> yet, this is just for a standard normal.</p>
 <p>If we really wanted this in &quot;the usual way&quot; &#40;that is, with respect to Lebesgue measure&#41;, there&#39;s a three-argument form that lets us specify the base measure:</p>
-<pre><code class="language-julia">logdensity&#40;Normal&#40;&#41;, Lebesgue&#40;ℝ&#41;, 1.0&#41;</code></pre><pre><code class="plaintext">-1.4189385332046727</code></pre>
+<pre><code class="language-julia">logdensity&#40;Normal&#40;&#41;, Lebesgue&#40;ℝ&#41;, 1.0&#41;</code></pre><pre><code class="plaintext code-output">-1.4189385332046727</code></pre>
 <p>which ought to match up with</p>
-<pre><code class="language-julia">Dists.logpdf&#40;Dists.Normal&#40;&#41;, 1.0&#41;</code></pre><pre><code class="plaintext">-1.4189385332046727</code></pre>
+<pre><code class="language-julia">Dists.logpdf&#40;Dists.Normal&#40;&#41;, 1.0&#41;</code></pre><pre><code class="plaintext code-output">-1.4189385332046727</code></pre>
 <p>By the way, <code>MeasureTheory</code> exports <code>Distributions</code> as <code>Dists</code> for easy typing. And yes, exery <code>Dists.Distribution</code> can be used from MeasureTheory; you&#39;ll just miss out on some flexibility and performance.</p>
 <h3 id="baserandrngrandomabstractrng_ttype_dnormal_randnrng_t"><a href="#baserandrngrandomabstractrng_ttype_dnormal_randnrng_t" class="header-anchor"><code>Base.rand&#40;rng::Random.AbstractRNG, T::Type, d::Normal&#123;&#40;&#41;&#125;&#41; &#61; randn&#40;rng, T&#41;</code></a></h3>
 <p>Hopefully this one is clear. One fine point worth mentioning is that some dispatch happening outside of this gives us some methods for free. So for example, we could do</p>
 <pre><code class="language-julia">rng &#61; Random.GLOBAL_RNG
-rand&#40;rng, Float32, Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext">-1.523651f0</code></pre>
+rand&#40;rng, Float32, Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext code-output">-1.523651f0</code></pre>
 <p>but also</p>
-<pre><code class="language-julia">rand&#40;rng, Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext">0.22558175089484894</code></pre>
+<pre><code class="language-julia">rand&#40;rng, Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext code-output">0.22558175089484894</code></pre>
 <p>or</p>
-<pre><code class="language-julia">rand&#40;Float16, Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext">Float16(0.631)</code></pre>
+<pre><code class="language-julia">rand&#40;Float16, Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext code-output">Float16(0.631)</code></pre>
 <p>or just</p>
-<pre><code class="language-julia">rand&#40;Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext">1.566945776473056</code></pre>
+<pre><code class="language-julia">rand&#40;Normal&#40;&#41;&#41;</code></pre><pre><code class="plaintext code-output">1.566945776473056</code></pre>
 <h3 id="μσ_methods_normal"><a href="#μσ_methods_normal" class="header-anchor"><code>@μσ_methods Normal&#40;&#41;</code></a></h3>
 <p>This is our last line, and we still haven&#39;t touched anything outside a standard normal &#40;mean zero, standard deviation one&#41;.</p>
 <p>But there&#39;s nothing about this last step that&#39;s specific to normal distributions; it&#39;s just one example of a <a href="https://en.wikipedia.org/wiki/Location&#37;E2&#37;80&#37;93scale_family">location-scale family</a>. There&#39;s so much common behavior here across distributions, we should be able to abstract it.</p>
