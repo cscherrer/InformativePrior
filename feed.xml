@@ -23,6 +23,25 @@
 
 <item>
   <title>
+    <![CDATA[  Toward Low-Rank Bayesian Modeling  ]]>
+  </title>
+  <link> https://informativeprior.com/blog/2021/10-21-grassmannian/index.html </link>
+  <guid> https://informativeprior.com/blog/2021/10-21-grassmannian/index.html </guid>
+  <description>
+    <![CDATA[  Grassmannian.  ]]>
+  </description>  
+    
+  <pubDate>Thu, 21 Oct 2021 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Chad Scherrer</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Blurb: Forward Sample Exploration in Soss  ]]>
   </title>
   <link> https://informativeprior.com/blog/2021/05-10-soss-sample-wrangling/index.html </link>

@@ -1,0 +1,269 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.16.4 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en">
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PYLMFWW0P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    gtag('config', 'G-3PYLMFWW0P');
+  </script>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rosario&display=swap" rel="stylesheet"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="/libs/katex/katex.min.css">
+     
+   <link rel="stylesheet" href="/libs/highlight/github.min.css">
+   
+  <link rel="stylesheet" href="/css/franklin.css">
+<link rel="stylesheet" href="/css/minimal-mistakes.css">
+<link rel="stylesheet" href="/css/adjust.css">
+<link rel="icon" href="/assets/favicon.png">
+<!--[if IE ]>
+<style>
+  /* old IE unsupported flexbox fixes */
+  .greedy-nav .site-title {
+    padding-right: 3em;
+  }
+  .greedy-nav button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+  }
+</style>
+<![endif]-->
+
+   <title>Toward Low-Rank Bayesian Modeling</title>  
+
+  <!-- end custom head snippets -->
+</head>
+<body class="layout--single">
+  <div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <a class="site-title" href="/">Informative Prior</a>
+        <ul class="visible-links">
+          <li class="masthead__menu-item"><a href="/about-us/" >About Us</a></li>
+          <li class="masthead__menu-item"><a href="/blog/" >Blog</a></li>
+        </ul>
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="initial-content">
+    <div id="main" role="main">
+      <div class="sidebar sticky">
+        <div itemscope itemtype="https://schema.org/Person">
+          <div class="author__avatar">
+            <img src="/assets/chad-avatar.jpg" alt="Chad Scherrer" itemprop="image">
+          </div>
+          <div class="author__content">
+            <h3 class="author__name" itemprop="name">Chad Scherrer</h3>
+            <p class="author__bio" itemprop="description">Founder</p>
+          </div>
+          <div class="author__urls-wrapper">
+            <button class="btn btn--inverse">Follow</button>
+            <ul class="author__urls social-icons">
+              <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+                <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Seattle, WA</span></li>
+              <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+              <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+
+<!-- Content appended here -->
+<div class="franklin-content">
+<h1 id="title"><a href="#title" class="header-anchor">Toward Low-Rank Bayesian Modeling</a></h1>
+<p><em>Oct 21, 2021</em></p>
+<p><em>We discuss some ideas needed for low-rank modeling in probabilistic programming, along the way introducing the Stiefel manifold and the Grassmannian.</em></p>
+<p>A common approach for making high-dimensional data more manageable is through <a href="https://en.wikipedia.org/wiki/Dimensionality_reduction">dimensionality reduction</a>. The most familiar for most of us is <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">principal component analysis</a>, though there are <a href="https://web.stanford.edu/~boyd/papers/pdf/glrm.pdf">many other possibilities</a>.</p>
+<p>Our goal here isn&#39;t to describe low-rank models in great detail &#40;yet&#41;, but to motivate one important ingredient. So keeping things high-level, we could consider a generative model like</p>
+<ol>
+<li><p>Pick a random \(k\)-dimensional subspace \(s<\mathbb{R}^n\) </p>
+</li>
+<li><p>Sample a point \(x\in s\) from some distribution</p>
+</li>
+<li><p>Sample a point \(y\) from a distribution centered at \(x\).</p>
+</li>
+</ol>
+<p>We could write this in pseudo-Soss as</p>
+<pre><code class="language-julia">m &#61; @model k,n begin
+    s ~ RandomSubspace&#40;k,n&#41;
+    x ~ SomeDistribution&#40;s&#41;
+    y ~ MvNormal&#40;μ&#61;x&#41;
+end</code></pre>
+<p>As a special case, <code>SomeDistribution</code> may not be a distribution at all, but Lebesgue measure &#40;a &quot;flat prior&quot; over the subspace&#41;. If we fit this with maximum likelihood, the loss is the sum of the squared distances to the subspace, and we get exactly PCA.</p>
+<p>More generally, this approach gives <a href="https://probml.github.io/pml-book/book0.html">factor analysis</a>, for example <a href="https://www.robots.ox.ac.uk/~cvrg/hilary2006/ppca.pdf">probabilistic PCA</a>.</p>
+<h1 id="sampling_a_random_subspace"><a href="#sampling_a_random_subspace" class="header-anchor">Sampling a Random Subspace</a></h1>
+<p>Now we get to the critical question: <em>How should we sample a random subspace?</em></p>
+<p>Let&#39;s work with a simple example to make things more concrete. We&#39;ll take \(n=3\) and <code>SomeDistribution</code> will be multivariate normal with \(\Sigma = \mathrm{I}\). We&#39;ll start with \(k=1\), then move on to \(k=2\).</p>
+<h2 id="k_1"><a href="#k_1" class="header-anchor">\(k = 1\)</a></h2>
+<p>To determine a subspace &#40;through the origin – we want a <em>linear</em> space, not an <em>affine</em> space&#41;, it&#39;s enough to specify any non-origin point that lies on it.</p>
+<p>Well, it&#39;s not quite that simple, since many of these points will correspond to the same subspace. By definition, for any \(v\in s\) and \(\alpha\in\mathbb{R}\), we also have \(\alpha v\in s\).</p>
+<p>So we need some constraints on \(v\):</p>
+<ol>
+<li><p>\(\|v\| = 1\), and</p>
+</li>
+<li><p>The first component of \(v\) is positive.</p>
+</li>
+</ol>
+<p>Besides helping pin down the correspondence, &#40;1&#41; is important for making sure the \(\mathbb{R}^k \to \mathbb{R}^n\) embedding is <em>rigid</em>. So for example, the expected norm will be the same before and after embedding. Without this, reasoning about our model would be very difficult.</p>
+<p>&#40;2&#41; is a bit more arbitrary, but will become natural when we express this in matrix form.</p>
+<h2 id="k_2"><a href="#k_2" class="header-anchor">\(k = 2\)</a></h2>
+<p>So far, so good. At this point we might optimistically hope to do the same thing twice. Pick \(v_1\) and \(v_2\), and be done with it. This doesn&#39;t work, because we need \(v_1\) and \(v_2\) to be orthogonal. This is again part of the rigidity requirement.</p>
+<p>If we take every such \(v_1\) and \(v_2\) &#40;well, without the positivity constraint&#41;, the result is the <a href="https://en.wikipedia.org/wiki/Stiefel_manifold">Stiefel manifold</a>, a term I hadn&#39;t heard before <a href="https://twitter.com/thatpinkney">Sean Pinkney</a> mentioned it on Twitter. A call with <a href="https://twitter.com/sethaxen">Seth Axen</a> helped clear up some details on the Stiefel manifold. But for this application, I think it&#39;s still not quite what we need.</p>
+<p>A big concern in modeling &#40;Bayesian or not&#41; is <a href="https://en.wikipedia.org/wiki/Identifiability">identifiability</a>. Different parameters should always yield different distributions.</p>
+<p>For our isotropic Gaussian on \(s\), we could rotate the basis or flip it around, and there&#39;s no difference. The Stiefel manifold needs to be further constrained.</p>
+<h1 id="the_grassmannian"><a href="#the_grassmannian" class="header-anchor">The Grassmannian</a></h1>
+<p>It turns out the thing we&#39;re looking for already has a name. The <a href="https://en.wikipedia.org/wiki/Grassmannian">Grassmannian</a> \(\mathrm{Gr}(k,n)\) is the manifold of all \(k\)-dimensional subspaces of \(\mathbb{R}^n\).</p>
+<p>Outside of our problem, people doing numerical work with the Grassmannian need mapping from any subspace to a &#40;unique&#41; matrix. But what&#39;s convenient for one problem might not work well for another.</p>
+<p>A common approach is to use the identity matrix &quot;on top of&quot; an abitrary matrix. For example, an element of \(\mathrm{Gr}(4,7)\) might be represented as</p>
+<pre><code class="language-julia">using LinearAlgebra
+
+k &#61; 4
+n &#61; 7
+
+W &#61; &#91;I; randn&#40;n - k, k&#41;&#93;</code></pre>
+<pre><code class="plaintext code-output">7×4 Matrix{Float64}:
+  1.0        0.0        0.0        0.0
+  0.0        1.0        0.0        0.0
+  0.0        0.0        1.0        0.0
+  0.0        0.0        0.0        1.0
+  0.922622  -0.446624   1.34798    0.517499
+  0.467042  -0.874981  -0.70608    1.00046
+ -0.662213   0.379531   0.683676  -0.738521</code></pre>
+<p>Again, this won&#39;t quite work for our purposes. We need to be able to take a 4-dimensional standard normal and multiply it to rigidly embed in 7 dimensions. The span is right, but it fails our criteria from above.</p>
+<h2 id="making_it_work"><a href="#making_it_work" class="header-anchor">Making it work</a></h2>
+<p>So let&#39;s fix it&#33; We can transform this to another set of columns with the same span, that actually meet our needs. It&#39;s still the same Grassmannian, just a different choice of representative for each subspace.</p>
+<p>First, the QR decomposition helps us find an orthonormal basis:</p>
+<pre><code class="language-julia">Q &#61; Matrix&#40;first&#40;qr&#40;W&#41;&#41;&#41;</code></pre>
+<pre><code class="plaintext code-output">7×4 Matrix{Float64}:
+ -0.63146   -0.332701    0.16222    0.337173
+  0.0       -0.778301    0.151592  -0.341247
+  0.0        0.0        -0.529772  -0.125532
+  0.0        0.0         0.0       -0.804545
+ -0.582599   0.0406504  -0.632161  -0.122074
+ -0.294919   0.525613    0.317186  -0.260219
+  0.418161  -0.0750705  -0.412083   0.155556</code></pre>
+<p>Next we can impose lower triangularity:</p>
+<pre><code class="language-julia">L &#61; first&#40;lq&#40;Q&#41;&#41;</code></pre>
+<pre><code class="plaintext code-output">7×4 Matrix{Float64}:
+  0.805874    0.0          0.0         0.0
+  0.209057    0.837542     0.0         0.0
+ -0.159163   -0.00501162   0.520633    0.0
+ -0.336617    0.411824     0.0950439  -0.596112
+  0.261399   -0.167703     0.750989   -0.308487
+ -0.0309325  -0.317282    -0.272522   -0.596384
+ -0.314534    0.0103058    0.285753    0.440241</code></pre>
+<p>Finally, we need to make sure the diagonal is positive:</p>
+<pre><code class="language-julia">V &#61; L * Diagonal&#40;sign.&#40;diag&#40;L&#41;&#41;&#41;</code></pre>
+<pre><code class="plaintext code-output">7×4 Matrix{Float64}:
+  0.805874    0.0          0.0        -0.0
+  0.209057    0.837542     0.0        -0.0
+ -0.159163   -0.00501162   0.520633   -0.0
+ -0.336617    0.411824     0.0950439   0.596112
+  0.261399   -0.167703     0.750989    0.308487
+ -0.0309325  -0.317282    -0.272522    0.596384
+ -0.314534    0.0103058    0.285753   -0.440241</code></pre>
+<p>Putting all of this into a function, we get</p>
+<pre><code class="language-julia">function WtoV&#40;W&#41;
+    Q &#61; Matrix&#40;first&#40;qr&#40;W&#41;&#41;&#41;
+    L &#61; first&#40;lq&#40;Q&#41;&#41;
+    V &#61; L * Diagonal&#40;sign.&#40;diag&#40;L&#41;&#41;&#41;
+    return V
+end</code></pre>
+<h2 id="checking_the_span"><a href="#checking_the_span" class="header-anchor">Checking the span</a></h2>
+<p>It&#39;s clear from the zeros that \(W\) and \(V\) both have rank 4. To check that they have the same span, we can compute</p>
+<pre><code class="language-julia">rank&#40;&#91;W V&#93;&#41;</code></pre>
+<pre><code class="plaintext code-output">4</code></pre>
+<p>Since the rank hasn&#39;t increased, the spans must be the same.</p>
+<h2 id="going_back"><a href="#going_back" class="header-anchor">Going back</a></h2>
+<p>The inverse takes a little more hand-coding, but it&#39;s still not too bad:</p>
+<pre><code class="language-julia">function VtoW&#40;V&#41;
+    # Makes ones on the diagonal
+    W &#61; V / Diagonal&#40;diag&#40;V&#41;&#41;
+
+    # Gaussian elimination to clear the top
+    for editcol in 1:k
+        for refcol in &#40;editcol &#43; 1&#41;:k
+            m &#61; -W&#91;refcol, editcol&#93;
+            for i in refcol:n
+                W&#91;i, editcol&#93; &#43;&#61; m * W&#91;i, refcol&#93;
+            end
+        end
+    end
+    return W
+end</code></pre>
+<p>And a quick check that we got the inverse right:</p>
+<pre><code class="language-julia">&#40;WtoV ∘ VtoW&#41;&#40;V&#41; ≈ V  &amp;&amp;  &#40;VtoW ∘ WtoV&#41;&#40;W&#41; ≈ W</code></pre>
+<pre><code class="plaintext code-output">true</code></pre>
+<h1 id="so_whats_left"><a href="#so_whats_left" class="header-anchor">So what&#39;s left?</a></h1>
+<p>The standard approach &#40;originating in Stan, I think?&#41; is to work in terms of a map from unconstrained real vectors to whatever space you&#39;re interested in. And while it&#39;s easy to take a length 12 vector, build a \(W\), and then just compute <code>WtoV&#40;W&#41;</code>, that has some problems:</p>
+<ol>
+<li><p>It&#39;s not a very direct path. There are very likely redundant computations, and worse there are lots of allocations along the way. </p>
+</li>
+<li><p>We also need the log absolute determinant of the Jacobian. This might be easier than it looks, but it&#39;s not obvious.</p>
+</li>
+</ol>
+<p>Ideally, we want something that takes a vector \(x\) and traverses it only once, accumulating the log-Jacobian as it goes. Is that possible in this case? If not, how close can we get?</p>
+<div class="page-foot">
+  <div class="copyright">
+    &copy; Chad Scherrer. Last modified: October 21, 2021. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+  </div>
+</div>
+</div><!-- CONTENT ENDS HERE -->
+
+      </div> <!-- closure of main -->
+    </div>   <!-- closure of class initial--content -->
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+        <!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+          <ul class="social-icons">
+            <li><strong>Follow:</strong></li>
+            <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+            <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          </ul>
+        </div>
+        <div class="page__footer-copyright">&copy; 2021 Chad Scherrer. Powered by <a href="https://github.com/tlienart/Franklin.jl">Franklin</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+      </footer>
+    </div>
+
+    <script src="/libs/minimal-mistakes/main.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js" integrity="sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH" crossorigin="anonymous"></script>
+
+    
+        <script src="/libs/katex/katex.min.js"></script>
+<script src="/libs/katex/auto-render.min.js"></script>
+<script>renderMathInElement(document.body)</script>
+
+    
+    
+        <script src="/libs/highlight/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();hljs.configure({tabReplace: '    '});</script>
+
+    
+  </body>
+</html>

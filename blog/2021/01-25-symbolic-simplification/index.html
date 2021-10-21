@@ -120,7 +120,7 @@ end</code></pre>
 y &#61; trace.y</code></pre>
 
 <p>As a result, we now have</p>
-<pre><code class="plaintext">trace.σ = 0.3974449483739133
+<pre><code class="plaintext code-output">trace.σ = 0.3974449483739133
 trace.β = 0.5236103489251422
 mean(y) = -0.009302852896095896
 std(y) = 0.6630927798796098
@@ -131,11 +131,11 @@ std(y) = 0.6630927798796098
 <p>To evaluate this, say on the <code>trace</code> from the original sample, we just call</p>
 <pre><code class="language-julia">logdensity&#40;post, trace&#41;</code></pre>
 <p>which in this case gives </p>
-<pre><code class="plaintext">4123.1269713242</code></pre>
+<pre><code class="plaintext code-output">4123.1269713242</code></pre>
 <p>Let&#39;s see how fast it is.</p>
 <pre><code class="language-julia">using BenchmarkTools
 slow &#61; @benchmark &#36;logdensity&#40;&#36;post, &#36;trace&#41;</code></pre>
-<pre><code class="plaintext">BenchmarkTools.Trial: 
+<pre><code class="plaintext code-output">BenchmarkTools.Trial: 
   memory estimate:  1.07 MiB
   allocs estimate:  60032
   --------------
@@ -151,7 +151,7 @@ slow &#61; @benchmark &#36;logdensity&#40;&#36;post, &#36;trace&#41;</code></pre
 <pre><code class="language-julia">ℓ &#61; symlogdensity&#40;post&#41;
 f &#61; codegen&#40;post; ℓ&#61;ℓ&#41;
 fast &#61; @benchmark &#36;f&#40;&#36;&#40;;x,λ&#41;, &#36;&#40;;y&#41;, &#36;trace&#41;</code></pre>
-<pre><code class="plaintext">BenchmarkTools.Trial: 
+<pre><code class="plaintext code-output">BenchmarkTools.Trial: 
   memory estimate:  0 bytes
   allocs estimate:  0
   --------------
@@ -169,7 +169,7 @@ fast &#61; @benchmark &#36;f&#40;&#36;&#40;;x,λ&#41;, &#36;&#40;;y&#41;, &#36;t
 <p>At this point, we have a symbolic expression, and we also have a dictionary of fixed values from the arguments and observed values. So we expand the expression and then walk the result, looking for subexpressions that evaluate to scalars with no free variables. When we find one, we use the dictionary to rewrite it.</p>
 <p>Next, we do <a href="https://en.wikipedia.org/wiki/Common_subexpression_elimination">common subexpression elimination</a>, which just makes sure we don&#39;t evaluate the same thing twice.</p>
 <pre><code class="language-julia">Soss.cse&#40;ℓ&#41;</code></pre>
-<pre><code class="plaintext">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
+<pre><code class="plaintext code-output">11-element Vector{Pair{Symbol, SymbolicUtils.Symbolic}}:
  Symbol("##1212") => -σ
  Symbol("##1213") => log(σ)
  Symbol("##1214") => -10000var"##1213"
@@ -183,7 +183,7 @@ fast &#61; @benchmark &#36;f&#40;&#36;&#40;;x,λ&#41;, &#36;&#40;;y&#41;, &#36;t
  Symbol("##1222") => var"##1212" + var"##1214" + var"##1216" + var"##1221"</code></pre>
 <p>It&#39;s a very short step to get from that to a Julia <code>Expr</code> that does what we want:</p>
 <pre><code class="language-julia">sourceCodegen&#40;post&#41;</code></pre>
-<pre><code class="plaintext">quote
+<pre><code class="plaintext code-output">quote
     var"##1275" = (*)(-1.0, σ)
     var"##1276" = (log)(σ)
     var"##1277" = (*)(-10000, var"##1276")
@@ -198,7 +198,7 @@ fast &#61; @benchmark &#36;f&#40;&#36;&#40;;x,λ&#41;, &#36;&#40;;y&#41;, &#36;t
 end</code></pre>
 <p>Finally we add some code to tell us where to get the variables, and use <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl"><code>GeneralizedGenerated.jl</code></a> to make it callable:</p>
 <pre><code class="language-julia">codegen&#40;post; ℓ&#61;ℓ&#41;</code></pre>
-<pre><code class="plaintext">function = (_args, _data, _pars;) -> begin
+<pre><code class="plaintext code-output">function = (_args, _data, _pars;) -> begin
     begin
         β = (Main.FD_SANDBOX_8265385389467078856).getproperty(_pars, :β)
         σ = (Main.FD_SANDBOX_8265385389467078856).getproperty(_pars, :σ)
@@ -227,7 +227,7 @@ end</code></pre>
 <p>To account for this, we have a <code>noinline</code> switch that allows specification of variables to leave alone. For example,</p>
 <pre><code class="language-julia">ℓλ &#61; symlogdensity&#40;post; noinline&#61;&#40;:λ,&#41;&#41;</code></pre>
 <p>which results in </p>
-<pre><code class="plaintext">log(λ) - 10000log(σ) - 0.5(β^2) - λ*σ - 0.5(4397.346085970023 + (9926.08855387485(β^2)) - (10516.391601146232β))*(σ^-2)</code></pre>
+<pre><code class="plaintext code-output">log(λ) - 10000log(σ) - 0.5(β^2) - λ*σ - 0.5(4397.346085970023 + (9926.08855387485(β^2)) - (10516.391601146232β))*(σ^-2)</code></pre>
 <h1 id="when_does_this_work"><a href="#when_does_this_work" class="header-anchor">When Does This Work?</a></h1>
 <p>Cases where <code>symlogdensity</code> &quot;works&quot; in the sense of &quot;doesn&#39;t break&quot; are growing quickly; I expect that with some modest effort we can get to a point where every models gives <em>some</em> result that&#39;s at least as efficient as the direct approach.</p>
 <p>The great speedups we&#39;re seeing in this example come thanks in large part to the normal distribution &#40;for the observations&#41; is an exponential family. This means sufficient statistics are of a fixed dimenionality independent of the number of observations. The most obvious applicability I see is for <a href="https://en.wikipedia.org/wiki/Generalized_linear_model">generalized linear models</a>.</p>
@@ -244,7 +244,7 @@ after &#61; @elapsed dynamicHMC&#40;post; ℓ&#61;ℓ&#41;
 speedup &#61; before / after
 
 @show before, after, speedup</code></pre>
-<pre><code class="plaintext">(before, after, speedup) = (26.963195093, 2.257612865, 11.943232389845546)
+<pre><code class="plaintext code-output">(before, after, speedup) = (26.963195093, 2.257612865, 11.943232389845546)
 </code></pre>
 <p>The result is not nearly as dramatic as we saw for evaluation, but it&#39;s still substantial. Like all the best questions, the answer to this one raises plenty more questions, which we&#39;ll look into another time.</p>
 <h2 id="related_research"><a href="#related_research" class="header-anchor">Related Research</a></h2>
