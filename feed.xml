@@ -28,7 +28,7 @@
   <link> https://informativeprior.com/blog/2021/10-21-grassmannian/index.html </link>
   <guid> https://informativeprior.com/blog/2021/10-21-grassmannian/index.html </guid>
   <description>
-    <![CDATA[  Grassmannian.  ]]>
+    <![CDATA[  We discuss some ideas needed for low-rank modeling in probabilistic programming, along the way introducing the Stiefel manifold and the Grassmannian.  ]]>
   </description>  
     
   <pubDate>Thu, 21 Oct 2021 00:00:00 +0000</pubDate>  
