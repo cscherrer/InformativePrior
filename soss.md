@@ -9,3 +9,9 @@
 ~~~
 <iframe width="560" height="315" src="https://www.youtube.com/embed/rGYf55aWcXc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 ~~~
+
+**Learning Bayesian Statistics #13** \\
+*Building a Probabilistic Programming Framework in Julia, with Chad Scherrer*
+~~~
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GVI9kC0sMZk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+~~~
