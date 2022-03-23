@@ -1,0 +1,285 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.16.4 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en">
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PYLMFWW0P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    gtag('config', 'G-3PYLMFWW0P');
+  </script>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rosario&display=swap" rel="stylesheet"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+   <link rel="stylesheet" href="/libs/highlight/github.min.css">
+   
+  <link rel="stylesheet" href="/css/franklin.css">
+<link rel="stylesheet" href="/css/minimal-mistakes.css">
+<link rel="stylesheet" href="/css/adjust.css">
+<link rel="icon" href="/assets/favicon.png">
+<!--[if IE ]>
+<style>
+  /* old IE unsupported flexbox fixes */
+  .greedy-nav .site-title {
+    padding-right: 3em;
+  }
+  .greedy-nav button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+  }
+</style>
+<![endif]-->
+
+   <title>Probabilistic Modeling with Tilde.jl</title>  
+
+  <!-- end custom head snippets -->
+</head>
+<body class="layout--single">
+  <div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <a class="site-title" href="/">Informative Prior</a>
+        <ul class="visible-links">
+          <li class="masthead__menu-item"><a href="/about-us/" >About Us</a></li>
+          <li class="masthead__menu-item"><a href="/blog/" >Blog</a></li>
+        </ul>
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="initial-content">
+    <div id="main" role="main">
+      <div class="sidebar sticky">
+        <div itemscope itemtype="https://schema.org/Person">
+          <div class="author__avatar">
+            <img src="/assets/chad-avatar.jpg" alt="Chad Scherrer" itemprop="image">
+          </div>
+          <div class="author__content">
+            <h3 class="author__name" itemprop="name">Chad Scherrer</h3>
+            <p class="author__bio" itemprop="description">Founder</p>
+          </div>
+          <div class="author__urls-wrapper">
+            <button class="btn btn--inverse">Follow</button>
+            <ul class="author__urls social-icons">
+              <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+                <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Seattle, WA</span></li>
+              <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+              <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+
+<!-- Content appended here -->
+<div class="franklin-content">
+<h1 id="title"><a href="#title" class="header-anchor">Probabilistic Modeling with Tilde.jl</a></h1>
+<p><em>March 23, 2022</em></p>
+<p><em>We introduce <a href="https://github.com/cscherrer/Tilde">Tilde.jl</a>, a new probabilistic programming language and successor to <a href="https://github.com/cscherrer/Soss">Soss.jl</a>.</em></p>
+<h2 id="from_soss_to_tilde"><a href="#from_soss_to_tilde" class="header-anchor">From Soss to Tilde</a></h2>
+<p><a href="https://github.com/cscherrer/Soss.jl">Soss.jl</a> makes it easy to work with generative models. &quot;Work with&quot; includes the usual things like sampling from the prior and evaluating the log-density of the posterior &#40;leading naturally to inference methods like HMC&#41;, but also to do some less common manipulations like transforming one model into another.</p>
+<p>Soss models look very much like a specification you might see in a text or journal article. For example, here&#39;s a modified implementation of the model from the <a href="../2021/05-10-soss-sample-wrangling">Sample Wrangling</a> post:</p>
+<pre><code class="language-julia">soss_example &#61; @model n begin
+    α ~ Normal&#40;&#41;
+    β ~ Normal&#40;&#41;
+    x ~ Normal&#40;&#41; |&gt; iid&#40;n&#41;
+    σ ~ Exponential&#40;&#41;
+    ŷ &#61; α .&#43; β .* xj
+    y ~ For&#40;x&#41; do xj
+        Normal&#40;ŷ&#91;j&#93;, σ&#41;
+    end
+    return y
+end</code></pre>
+<p>You might notice that in the body of the model, everything up to <code>return y</code> is either of the form <code>lhs ~ rhs</code> or <code>lhs &#61; rhs</code>. In Soss, the left side of each <code>~</code> or <code>&#61;</code> must be a symbol. In particular, Soss doesn&#39;t allow things like <code>y&#91;j&#93; ~ Normal&#40;&#41;</code>. The advantage to this approach is that is makes it very easy to determine the graph, and to define model transformations like prior or predictive distributions.</p>
+<p>But sometimes we need more flexibility. Maybe we&#39;d like to define dependencies using a <code>for</code> loop, or even execute arbitrary Julia code as part of the model. We can do this with <a href="https://github.com/cscherrer/Tilde.jl">Tilde.jl</a>.</p>
+<pre><code class="language-julia">tilde_example &#61; @model &#40;x, s&#41; begin
+    σ ~ Exponential&#40;&#41;
+    @inbounds x&#91;1&#93; ~ Normal&#40;σ &#61; σ&#41;
+    n &#61; length&#40;x&#41;
+    @inbounds for j &#61; 2:n
+        x&#91;j&#93; ~ StudentT&#40;1.5, x&#91;j - 1&#93;, σ&#41;
+    end
+end</code></pre>
+<h2 id="semantics"><a href="#semantics" class="header-anchor">Semantics</a></h2>
+<p>Semantics in probabilistic programming can be tricky, because a model can be &quot;run&quot; in different ways. That is, there&#39;s no single <code>~</code> function to tell us what <code>y&#91;j&#93; ~ Normal&#40;&#41;</code> actually means. A common approach is to use <em>monadic semantics</em>, which treat <code>~</code> similarly to <code>&lt;-</code> in Haskell&#39;s <code>do</code> notation. But similar to Soss, this requires the left-side to be a new symbol to be bound to a value.</p>
+<p>Instead, let&#39;s think of some common use cases. From experience, the two most common interpretations are <em>log-density evaluation</em> and <em>sampling</em>. In Tilde, both of these are implemented in terms of &quot;running the model&quot; a single time. We refer to the abstractions to support such a single execution as <em>primitives</em>. In these cases, the primitives are the new methods for <code>logdensityof</code> and <code>rand</code>, respectively.</p>
+<p>To evaluate the log-density of a model, we need to be given values for all of the parameters. Then we set <code>ℓ &#61; 0.0</code> and step through the model. When we see something like <code>σ ~ Exponential&#40;&#41;</code>, it becomes <code>ℓ &#43;&#61; logdensityof&#40;Exponential&#40;&#41;, σ&#41;</code>. Similarly, <code>y&#91;j&#93; ~ Normal&#40;&#41;</code> can become <code>ℓ &#43;&#61; logdensityof&#40;Normal&#40;&#41;, y&#91;j&#93;&#41;</code>. At the end, we return the value of <code>ℓ</code>. The <code>logdensityof</code> primitive must account for all of this.</p>
+<p>By contrast in the sampling interpretation, <code>σ ~ Exponential&#40;&#41;</code> usually becomes <code>σ &#61; rand&#40;Exponential&#40;&#41;&#41;</code>. Similarly, <code>y&#91;j&#93; ~ Normal&#40;&#41;</code> becomes <code>y&#91;j&#93; &#61; rand&#40;Normal&#40;&#41;&#41;</code>.</p>
+<p>There are a couple of interesting things about this. First, unlike sampling into a new variable like <code>σ</code>, sampling into <code>y&#91;j&#93;</code> in this way requires that <code>y</code> already exist. It could be allocated as part of the model, or &#40;more interestingly, in my opinion&#41; passed as an argument to the model. In the latter case, we can think of this not as passing data, but as passing a block of memory for the model to use.</p>
+<p>We should also consider <em>mutability</em>. We&#39;ve implicitly assumed <code>y</code> is a <code>Vector</code>; what if the user instead passes a <code>StaticVector</code>? In this case <code>y&#91;j&#93; &#61; rand&#40;Normal&#40;&#41;&#41;</code> makes no sense; we need something more general.</p>
+<p>Fortunately, this problem has already been solved by the <a href="https://github.com/JuliaFolds/BangBang.jl">BangBang.jl</a> package. The interface is based around an elegant idea, which we can summarize as <em>always return the modified value &#40;if it&#39;s mutable&#41;, or a new copy &#40;if it&#39;s immutable&#41;</em>. Because the return values are consistent, we can use the same code for mutable or immutable inputs.</p>
+<h2 id="accessors"><a href="#accessors" class="header-anchor">Accessors</a></h2>
+<p>BangBang.jl is built around <a href="https://github.com/jw3126/Setfield.jl">Setfield.jl</a>. But as a successor to Soss, Tilde instead uses <a href="https://github.com/JuliaObjects/Accessors.jl">Accessors.jl</a>. As we&#39;ll see, the interface we need is lower-level than BangBang.jl, so this is not really a problem. In the end, we&#39;ll implement a thin wrapper in Accessors that takes inspiration from BangBang. But to begin with, let&#39;s just take this as motivation to work in terms of <a href="https://juliaobjects.github.io/Accessors.jl/stable/lenses/"><em>lenses</em></a>.</p>
+<p>The main idea is that we can treat <code>x ~ dist</code> as syntax sugar for the &quot;real&quot; code, where the left side of a <code>~</code> is always a pair of a value and a lens. So for example,</p>
+<ul>
+<li><p><code>σ ~ Exponential&#40;&#41;</code> means <code>&#40;σ, @optic _&#41; ~ Exponential&#40;&#41;</code>, and</p>
+</li>
+<li><p><code>y&#91;j&#93; ~ Normal</code> means <code>&#40;y, @optic _&#91;j&#93;&#41;</code>.</p>
+</li>
+</ul>
+<p>&#91;<em>N.B.</em>  There may be subtle technical distinctions, but in this article we use &quot;optic&quot; and &quot;lens&quot; as synonyms.&#93;</p>
+<p>It&#39;s worth mentioning that these <code>@optic</code> expressions simplify further:</p>
+<ul>
+<li><p><code>&#40;@optic _&#41; &#61;&#61; identity</code>, and</p>
+</li>
+<li><p><code>&#40;@optic _&#91;j&#93;&#41; &#61;&#61; Accessors.IndexLens&#40;&#40;j,&#41;&#41;</code>.</p>
+</li>
+</ul>
+<h2 id="configurations_and_contexts"><a href="#configurations_and_contexts" class="header-anchor">Configurations and contexts</a></h2>
+<p>As for any program, execution of any primitive on a given model involves passing variables around. Some of these variables are defined or modified by the model itself, and should be expected to behave in the same way irresepective of the interpretation. Beyond these, we can consider two classes, which we call the <em>context</em> and the <em>configuration</em>.</p>
+<p>The <em>context</em> contains interpretation-specific values that change during execution. For sampling, this can include any sampled values &#40;unless the user only wants the return value&#41;. For log-density evaluation, it might consist of only the log-density itself.</p>
+<p>By contrast, the <em>configuration</em> is &quot;static&quot;, for example parameter values in a log-density evaluation. The scare quotes here are because the configuration might contain mutable values that are modified as a side effect. In particular, it&#39;s sensible for a random number generator to be included as part of the configuration.</p>
+<p>The configuration and context could have been lumped into a single data structure. But separating things in this way feels natural given the different access patterns. It separates concerns, and gives us flexibility to use different data structures reflecting the difference in access patterns.</p>
+<h2 id="the_tilde_function"><a href="#the_tilde_function" class="header-anchor">The <code>tilde</code> function</a></h2>
+<p>Depending on the primitive &#40;the interpretation of the model, e.g. log-density or sampling&#41;, the model statement <code>y&#91;j&#93; ~ Normal&#40;&#41;</code> might change three things:</p>
+<ol>
+<li><p>The <em>value</em> of <code>y</code>,</p>
+</li>
+<li><p>The <em>context</em>, and</p>
+</li>
+<li><p>The <em>return value</em>.</p>
+</li>
+</ol>
+<p>These can depend on a few different inputs:</p>
+<ol>
+<li><p>The <em>lens</em>, in this case <code>@optic _&#91;j&#93;</code></p>
+</li>
+<li><p>The <em>name</em> of the current variable. This is coded as <code>static&#40;:y&#41;</code>, which evaluates to <code>StaticSymbol&#123;:y&#125;&#40;&#41;</code>. Having the name at the type level makes it easy to dispatch on the name or use generated functions, which can be important in some cases.</p>
+</li>
+<li><p>The <em>value</em> of the current variable &#40;<code>y</code>&#41;</p>
+</li>
+<li><p>The <em>measure</em> &#40;often, but not always, a distribution&#41; on the right side of the <code>~</code></p>
+</li>
+<li><p>The <em>configuration</em></p>
+</li>
+<li><p>The <em>context</em></p>
+</li>
+</ol>
+<p>This suggests replacing each <code>lhs ~ rhs</code> with an assignment of the former three values to some function of the latter six. But if we want the convenience of having a single function for this purpose, also need something to dispatch on that indicates what we&#39;re currently doing. So for dispatch purposes, we include an initial argument <code>f</code>, typically a function.</p>
+<p>Putting all of this together, <code>tilde</code> has the form</p>
+<pre><code class="language-julia">tilde&#40;f, lens, xname, xval, measure, cfg, ctx&#41; 
+    -&gt; &#40;new_xval, new_ctx, retn&#41;</code></pre>
+<p>So for example, when we call <code>rand</code> on a model containing <code>y&#91;j&#93; ~ Normal&#40;&#41;</code>, that line is rewritten as</p>
+<pre><code class="language-julia">&#40;y, _ctx, _retn&#41; &#61; 
+    tilde&#40;rand, &#40;@optic _&#91;j&#93;&#41;, static&#40;:y&#41;, y, Normal&#40;&#41;, _cfg, _ctx&#41;</code></pre>
+<p>The leading underscores are to avoid collision with user-defined names in the model.</p>
+<h2 id="returnnow"><a href="#returnnow" class="header-anchor"><code>ReturnNow</code></a></h2>
+<p>In some cases it&#39;s useful to allow a primitive to exit before the model has been fully evaluated. To allow for this, Tilde includes a wrapper</p>
+<pre><code class="language-julia">struct ReturnNow&#123;T&#125;
+    value::T
+end</code></pre>
+<p>If the <code>_retn</code> from a call to <code>tilde</code> is a <code>ReturnNow</code>, Tilde will interrupt evaluation and return that value immediately.</p>
+<h2 id="lens"><a href="#lens" class="header-anchor"><code>Lens&#33;&#33;</code></a></h2>
+<p>As described above, Tilde will automatically determine the lens for the left side of any <code>~</code> expression. But this lens already has a defined behavior in Accessors.jl. Sometimes we want to change that, and make things behave as they do in BangBang.jl.</p>
+<p>Thankfully, Accessors includes a nice description of how to extend it, which you can find <a href="https://juliaobjects.github.io/Accessors.jl/stable/examples/custom_macros/">here</a>. This, together with some basic understanding of BangBang semantics, made it relatively easy to build the wrapper</p>
+<pre><code class="language-julia">struct Lens&#33;&#33;&#123;L&#125;
+    pure::L
+end</code></pre>
+<p>Applying this to any lens results in a new &quot;BangBang-like&quot; lens. You can find details on this in <a href="https://github.com/cscherrer/Tilde.jl/blob/main/src/optics.jl">Tilde.jl/src/optics.jl</a>.</p>
+<h2 id="defining_rand"><a href="#defining_rand" class="header-anchor">Defining <code>rand</code></a></h2>
+<p>We&#39;re finally to a point where we can describe how <code>rand</code> is actually implemented. The method is defined like this:</p>
+<pre><code class="language-julia">@inline function Base.rand&#40;rng::AbstractRNG, m::ModelClosure; ctx&#61;NamedTuple&#40;&#41;&#41;
+    cfg &#61; &#40;rng&#61;rng,&#41;
+    gg_call&#40;m, rand, cfg, ctx, KeepReturn&#40;&#41;&#41;
+end</code></pre>
+<p><code>gg_call</code> uses <a href="https://github.com/JuliaStaging/GeneralizedGenerated.jl">GeneralizedGenerated.jl</a> to &quot;run the model&quot;, replacing each <code>~</code> with a call to <code>tilde</code> as we&#39;ve discussed.</p>
+<p>The last argument, <code>KeepReturn&#40;&#41;</code>, signals that any <code>return</code> statements in the model should be respected. By constrast, functions like <code>logdensityof</code> need to ignore these, which is indicated by instead passing <code>DropReturn&#40;&#41;</code> in this position.</p>
+<p>Then it&#39;s just a matter of defining <code>tilde</code>. In this case that&#39;s</p>
+<pre><code class="language-julia">@inline function tilde&#40;::typeof&#40;Base.rand&#41;, lens, xname, x, measure, cfg, ctx::NamedTuple&#41;
+    xnew &#61; set&#40;x, Lens&#33;&#33;&#40;lens&#41;, rand&#40;cfg.rng, measure&#41;&#41;
+    ctx′ &#61; merge&#40;ctx, NamedTuple&#123;&#40;dynamic&#40;xname&#41;,&#41;&#125;&#40;&#40;xnew,&#41;&#41;&#41;
+    &#40;xnew, ctx′, ctx′&#41;
+end</code></pre>
+<p>Well, there&#39;s a little more to it. If we have something like <code>σ ~ Exponential&#40;&#41;</code>, the <code>σ</code> variable wouldn&#39;t be defined when we get to it, so the <code>xnew &#61; ...</code> line will throw an error. But in that case, <code>lens</code> is always the identity function, so we can catch this situation by adding another method:</p>
+<pre><code class="language-julia">@inline function tilde&#40;::typeof&#40;Base.rand&#41;, lens::typeof&#40;identity&#41;, xname, x, measure, cfg, ctx::NamedTuple&#41;
+    xnew &#61; rand&#40;cfg.rng, measure&#41;
+    ctx′ &#61; merge&#40;ctx, NamedTuple&#123;&#40;dynamic&#40;xname&#41;,&#41;&#125;&#40;&#40;xnew,&#41;&#41;&#41;
+    &#40;xnew, ctx′, ctx′&#41;
+end</code></pre>
+<p>And that&#39;s it&#33; This is much simpler than defining methods like this in Soss.</p>
+<h2 id="ast_manipulations"><a href="#ast_manipulations" class="header-anchor">AST manipulations</a></h2>
+<p>Just as in Soss, Tilde maintains the original AST. For a model like</p>
+<pre><code class="language-julia">using Tilde
+
+m &#61; @model &#40;x, s&#41; begin
+    σ ~ Exponential&#40;&#41;
+    @inbounds x&#91;1&#93; ~ Normal&#40;σ &#61; σ&#41;
+    n &#61; length&#40;x&#41;
+    @inbounds for j &#61; 2:n
+        x&#91;j&#93; ~ StudentT&#40;1.5, x&#91;j - 1&#93;, σ&#41;
+    end
+end</code></pre>
+<p><code>m</code> has properties</p>
+<pre><code class="language-julia">m.args</code></pre>
+<pre><code class="plaintext code-output">2-element Vector{Symbol}:
+ :x
+ :s</code></pre>
+<p>and </p>
+<pre><code class="language-julia">m.body</code></pre>
+<pre><code class="plaintext code-output">quote
+    σ ~ Exponential()
+    @inbounds x[1] ~ Normal(σ = σ)
+    n = length(x)
+    @inbounds for j = 2:n
+            x[j] ~ StudentT(1.5, x[j - 1], σ)
+        end
+end</code></pre>
+<p>One part of upcoming Tilde development will be adding methods to make it easy to turn a given user-defined AST transform into a Tilde model transform.</p>
+<h2 id="closing_remarks"><a href="#closing_remarks" class="header-anchor">Closing Remarks</a></h2>
+<p>Tilde is still in the early stages, but I&#39;m very happy with how it&#39;s shaping up so far. If you have any questions, please check out the <a href="https://julialang.zulipchat.com">Julia Zulip</a> &#40;<code>measuretheory.jl</code> or <code>soss.jl</code> channels, until there&#39;s a Tilde-specific one&#41;, or ping me on <a href="https://twitter.com/ChadScherrer">Twitter</a> &#40;public if you can, in case others are interested&#41;.</p>
+<p>Thanks for making it this far; I hope you&#39;ll check out <a href="https://github.com/cscherrer/Tilde.jl">Tilde</a>&#33;</p>
+<div class="page-foot">
+  <div class="copyright">
+    &copy; Chad Scherrer. Last modified: March 23, 2022. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+  </div>
+</div>
+</div><!-- CONTENT ENDS HERE -->
+
+      </div> <!-- closure of main -->
+    </div>   <!-- closure of class initial--content -->
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+        <!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+          <ul class="social-icons">
+            <li><strong>Follow:</strong></li>
+            <li><a href="https://twitter.com/ChadScherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+            <li><a href="https://github.com/cscherrer" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          </ul>
+        </div>
+        <div class="page__footer-copyright">&copy; 2021 Chad Scherrer. Powered by <a href="https://github.com/tlienart/Franklin.jl">Franklin</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+      </footer>
+    </div>
+
+    <script src="/libs/minimal-mistakes/main.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js" integrity="sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH" crossorigin="anonymous"></script>
+
+    
+    
+        <script src="/libs/highlight/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();hljs.configure({tabReplace: '    '});</script>
+
+    
+  </body>
+</html>
