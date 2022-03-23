@@ -23,6 +23,25 @@
 
 <item>
   <title>
+    <![CDATA[  Probabilistic Modeling with Tilde.jl  ]]>
+  </title>
+  <link> https://informativeprior.com/blog/2022/03-21-tilde/index.html </link>
+  <guid> https://informativeprior.com/blog/2022/03-21-tilde/index.html </guid>
+  <description>
+    <![CDATA[  We introduce Tilde, a new probabilistic programming language and successor to Soss.  ]]>
+  </description>  
+    
+  <pubDate>Wed, 23 Mar 2022 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Chad Scherrer</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Toward Low-Rank Bayesian Modeling  ]]>
   </title>
   <link> https://informativeprior.com/blog/2021/10-21-grassmannian/index.html </link>
