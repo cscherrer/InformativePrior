@@ -70,7 +70,7 @@ BangBang.jl is built around [Setfield.jl](https://github.com/jw3126/Setfield.jl)
 The main idea is that we can treat `x ~ dist` as syntax sugar for the "real" code, where the left side of a `~` is always a pair of a value and a lens. So for example,
 
 - `σ ~ Exponential()` means `(σ, @optic _) ~ Exponential()`, and
-- `y[j] ~ Normal` means `(y, @optic _[j])`.
+- `y[j] ~ Normal()` means `(y, @optic _[j]) ~ Normal()`.
 
 [*N.B.*  There may be subtle technical distinctions, but in this article we use "optic" and "lens" as synonyms.]
 
