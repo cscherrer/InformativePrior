@@ -10,7 +10,7 @@ hascode = true
 # {{title}}
 _March 23, 2022_
 
-_We introduce [Tilde.jl](https://github.com/cscherrer/Tilde), a new probabilistic programming language and successor to [Soss.jl](https://github.com/cscherrer/Soss)._
+_We introduce [Tilde](https://github.com/cscherrer/Tilde.jl), a new probabilistic programming language and successor to [Soss](https://github.com/cscherrer/Soss.jl)._
 
 ## From Soss to Tilde
 
